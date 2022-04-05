@@ -56,15 +56,7 @@ empiezaConM Miercoles    = True
 empiezaConM _            = False 
 
 vieneDespues :: DiaDeSemana -> DiaDeSemana -> Bool 
-vieneDespues Lunes Martes     = True 
-vieneDespues Martes Miercoles = True 
-vieneDespues Miercoles Jueves = True 
-vieneDespues Jueves Viernes   = True 
-vieneDespues Viernes Sabado   = True 
-vieneDespues Sabado  Domingo  = True 
-vieneDespues Domingo Lunes    = True 
-vieneDespues _ _              = False 
-
+vieneDespues dia1 dia2 = (numeroDelDiaDeSemana dia1) > (numeroDelDiaDeSemana dia2)
 
 estaEnElMedio :: DiaDeSemana -> Bool 
 estaEnElMedio diaDeSemana = numeroDelDiaDeSemana diaDeSemana > 1 && numeroDelDiaDeSemana diaDeSemana < 7 
@@ -78,6 +70,12 @@ numeroDelDiaDeSemana Jueves    = 4
 numeroDelDiaDeSemana Viernes   = 5 
 numeroDelDiaDeSemana Sabado    = 6
 numeroDelDiaDeSemana Domingo   = 7
+
+
+
+
+
+
 
 
 negar :: Bool -> Bool 
@@ -119,7 +117,7 @@ edad :: Persona -> Int
 edad  (ConsP n e) = e       
 
 crecer :: Persona -> Persona 
-crecer  consP = ConsP (nombre consP) ((edad consP) + 1)
+crecer  (ConsP n e)  = ConsP n (e +1)
 
 cambioDeNombre :: String -> Persona -> Persona
 cambioDeNombre nombre (ConsP _ edad) = ConsP nombre edad 
@@ -175,12 +173,11 @@ puedeSuperarA    _    _          = False
 
 cantidadDePokemonDe :: TipoDePokemon -> Entrenador -> Int
 --Devuelve la cantidad de Pokémon de determinado tipo que posee el entrenador.
-cantidadDePokemonDe  tp (ElEntrenador _ p1 p2) = cantidadDe tp p1 p2
+cantidadDePokemonDe  tp (ElEntrenador _ p1 p2) =  unoSi (esDelMismoTipo tp (tipoPokemon p1)) + 
+                                                  unoSi (esDelMismoTipo tp (tipoPokemon p2))
 
-
-cantidadDe :: TipoDePokemon -> Pokemon -> Pokemon -> Int 
-cantidadDe   tp (ElPokemon t1 _) (ElPokemon t2 _) = unoSi (esDelMismoTipo tp t1) + 
-                                                    unoSi (esDelMismoTipo tp t2)
+tipoPokemon :: Pokemon -> TipoDePokemon
+tipoPokemon (ElPokemon tp pe) = tp
 
 esDelMismoTipo :: TipoDePokemon -> TipoDePokemon -> Bool 
 esDelMismoTipo   Agua Agua      = True
