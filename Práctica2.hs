@@ -170,9 +170,9 @@ laPersonaMasViejaEntre  p1 p2 = if edad p1 > edad p2
 type NombreEntrenador  = String
 type PorcentajeEnergia = Int
 
-data TipoDePokemon = Agua | Fuego | Planta                       deriving (Show, Eq)
-data Pokemon       = ConsPokemon TipoDePokemon PorcentajeEnergia deriving (Show, Eq)
-data Entrenador    = ConsEntrenador NombreEntrenador [Pokemon]   deriving (Show, Eq)
+data TipoDePokemon = Agua | Fuego | Planta                       deriving Show
+data Pokemon       = ConsPokemon TipoDePokemon PorcentajeEnergia deriving Show
+data Entrenador    = ConsEntrenador NombreEntrenador [Pokemon]   deriving Show
 
 
 pokemon1 :: Pokemon
@@ -254,10 +254,10 @@ esMaestroPokemon (ConsEntrenador _ ps)  = (((cantPokemonEn Agua ps  ) >= 1)  &&
 
 type NombreProyecto = String
 
-data Seniority = Junior | SemiSenior | Senior                           deriving (Show, Eq)
-data Proyecto = ConsProyecto NombreProyecto                             deriving (Show, Eq)
-data Rol = Developer Seniority Proyecto | Management Seniority Proyecto deriving (Show, Eq)
-data Empresa = ConsEmpresa [Rol]                                        deriving (Show, Eq)
+data Seniority = Junior | SemiSenior | Senior                           deriving Show
+data Proyecto = ConsProyecto NombreProyecto                             deriving Show
+data Rol = Developer Seniority Proyecto | Management Seniority Proyecto deriving Show
+data Empresa = ConsEmpresa [Rol]                                        deriving Show
 
 
 rol1 :: Rol
