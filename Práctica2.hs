@@ -16,8 +16,7 @@ sucesores (x:xs) =  (x + 1) : sucesores xs
 
 
 conjuncion :: [Bool] -> Bool
-conjuncion []      = error "No hay elementos en la lista"
-conjuncion (b:[])  = b
+conjuncion []      = True
 conjuncion (x:xs)  = x && conjuncion xs 
 
 
@@ -46,9 +45,13 @@ unoSi False    = 0
 
 losMenoresA :: Int -> [Int] -> [Int]
 losMenoresA  n []       = []
-losMenoresA  n (x:xs)   =  if (esMayorA n x)     
+losMenoresA  n (x:xs)   =  if (esMayorA n x)
                            then x : losMenoresA n xs    
                            else losMenoresA n xs
+
+
+esMenorA:: Int -> Int -> Bool 
+esMenorA x y = x < y 
 
 
 esMayorA :: Int -> Int -> Bool 
@@ -82,9 +85,10 @@ elMinimo (x:xs)     = minimoEntre x (elMinimo xs)
 
 
 minimoEntre :: Ord a=> a -> a -> a 
-minimoEntre x y = if x < y 
+minimoEntre x y = if x < y
                   then x 
                   else y
+
 
 --
 zipMaximos :: [Int] -> [Int] -> [Int]
@@ -93,15 +97,21 @@ máximo entre el elemento n de la primera lista y de la segunda lista, teniendo 
 las listas no necesariamente tienen la misma longitud.
 -}
 zipMaximos []       []           = []
-zipMaximos (n1:ns1) []           = (n1:ns1)
 zipMaximos []       (n2:ns2)     = (n2:ns2)
-zipMaximos (n1:ns1) (n2:ns2)     = if (n1 > n2) 
-                                   then n1 : zipMaximos ns1 ns2 
-                                   else n2 : zipMaximos ns1 ns2 
+zipMaximos (n1:ns1) []           = (n1:ns1)
+zipMaximos (n1:ns1) (n2:ns2)     = maximoEntre n1 n2 : zipMaximos ns1 ns2 
+                                  
+
+maximoEntre :: Ord a=> a -> a -> a 
+maximoEntre x y = if x > y
+                  then x 
+                  else y
+
+
 
 factorial :: Int -> Int 
 factorial 0 = 1
-factorial n = n * (factorial (n-1)) 
+factorial n = n * factorial (n-1) 
 
 cuentaRegresiva :: Int -> [Int] 
 cuentaRegresiva  0 = []
@@ -216,22 +226,33 @@ esDelMismoTipo   Planta Planta  = True
 esDelMismoTipo   _  _           = False
 
 losQueLeGanan :: TipoDePokemon -> Entrenador -> Entrenador -> Int
-losQueLeGanan    tp (ConsEntrenador _  pok1) (ConsEntrenador _ pok2) = losQueGananA tp pok1 pok2 
+losQueLeGanan    tp (ConsEntrenador _  pok1) (ConsEntrenador _ pok2) = losQueLeGananATodos (pokemonesDeTipo tp pok1) pok2 
 
-losQueGananA :: TipoDePokemon -> [Pokemon] -> [Pokemon] -> Int 
-losQueGananA  tp  []  _              = 0 
-losQueGananA  tp  _  []              = 0
-losQueGananA  tp (p1:ps1) (p2:ps2)   = unoSi ((tienePokDeTipo p1 tp ) && (superarA p1 p2)) + 
-                                       losQueGananA tp ps1 ps2
 
- 
+losQueLeGananATodos :: [Pokemon] -> [Pokemon] -> Int 
+losQueLeGananATodos []     _     = 0
+losQueLeGananATodos (p:pks) pk2  = unoSi (superaATodos p pk2) + losQueLeGananATodos pks pk2
 
-superarA :: Pokemon -> Pokemon -> Bool 
-superarA  (ConsPokemon Agua p1 )  (ConsPokemon Fuego p2 ) = True 
-superarA  (ConsPokemon Fuego p1 ) (ConsPokemon Planta p2) = True
-superarA  (ConsPokemon Planta p1) (ConsPokemon Agua p2  ) = True 
-superarA  _                       _                       = False
+superaATodos :: Pokemon -> [Pokemon] -> Bool 
+superaATodos  p []        = True
+superaATodos  p (pk: pks) = superarA p pk && superaATodos p pks
 
+pokemonesDeTipo :: TipoDePokemon -> [Pokemon] -> [Pokemon]
+pokemonesDeTipo tp []     = []
+pokemonesDeTipo tp (p:ps) = if esDelMismoTipo tp (tipoDePokemon p)
+                            then p : pokemonesDeTipo tp ps
+                            else pokemonesDeTipo tp ps
+
+superarA  :: Pokemon -> Pokemon -> Bool
+superarA (ConsPokemon t1 _) (ConsPokemon t2 _) = puedeSuperarA t1 t2 
+
+--Dados dos Pokémon indica si el primero, en base al tipo, es superior al segundo. Agua
+--supera a fuego, fuego a planta y planta a agua. Y cualquier otro caso es falso.
+puedeSuperarA :: TipoDePokemon -> TipoDePokemon -> Bool 
+puedeSuperarA     Agua  Fuego    = True 
+puedeSuperarA     Fuego Planta   = True 
+puedeSuperarA     Planta Agua    = True 
+puedeSuperarA    _    _          = False 
 
 tienePokDeTipo :: Pokemon -> TipoDePokemon -> Bool 
 tienePokDeTipo  (ConsPokemon Agua _  ) Agua   = True
@@ -239,18 +260,12 @@ tienePokDeTipo  (ConsPokemon Fuego _ ) Fuego  = True
 tienePokDeTipo  (ConsPokemon Planta _) Planta = True 
 tienePokDeTipo  _                      _      = False  
 
-
 esMaestroPokemon :: Entrenador -> Bool
 --Dado un entrenador, devuelve True si posee al menos un Pokémon de cada tipo posible.
 esMaestroPokemon (ConsEntrenador _ [])  = False 
 esMaestroPokemon (ConsEntrenador _ ps)  = (((cantPokemonEn Agua ps  ) >= 1)  && 
                                           ((cantPokemonEn Fuego ps ) >= 1 )  && 
                                           ((cantPokemonEn Planta ps) >= 1) )
-
-
-
-
-
 
 type NombreProyecto = String
 
@@ -291,9 +306,17 @@ sinProyectosRepetidos (p:ps) = if elProyectoPertenece p ps
                                then     sinProyectosRepetidos ps 
                                else p : sinProyectosRepetidos ps 
 
+sinProyectosRepetidosMejor :: [Proyecto] -> [Proyecto]
+sinProyectosRepetidosMejor []     = []
+sinProyectosRepetidosMejor (p:ps) = let ps' = sinProyectosRepetidos ps
+                                     in if elProyectoPertenece p ps'
+                                         then     ps'
+                                         else p : ps' 
+
+
 elProyectoPertenece :: Proyecto -> [Proyecto] -> Bool
 elProyectoPertenece proyecto []     = False 
-elProyectoPertenece proyecto (p:ps) =  sonLosMismosProyectos proyecto p 
+elProyectoPertenece proyecto (p:ps) =  sonLosMismosProyectos proyecto p || elProyectoPertenece proyecto ps
 
 sonLosMismosProyectos :: Proyecto -> Proyecto -> Bool
 sonLosMismosProyectos  (ConsProyecto p1) (ConsProyecto p2) = p1 == p2 
@@ -310,7 +333,7 @@ proyectoDeRol (Management _ proyecto)  = proyecto
 losDevSenior :: Empresa -> [Proyecto] -> Int
 --Dada una empresa indica la cantidad de desarrolladores senior que posee, que pertecen
 --además a los proyectos dados por parámetro.
-losDevSenior (ConsEmpresa [])   ps = 0
+losDevSenior (ConsEmpresa [])   ps   = 0
 losDevSenior (ConsEmpresa (r:rs)) ps = unoSi (esDeveloperYPerteneceALosProyectos r ps) + 
                                        losDevSenior (ConsEmpresa rs) ps
 
@@ -324,8 +347,7 @@ esDeveloper (Management _ _ ) = False
 
 trabajaEnLosProyectos :: Rol -> [Proyecto] -> Bool
 trabajaEnLosProyectos r []     = False
-trabajaEnLosProyectos r (p:ps) = if (trabajaEnElProyecto r p) then True
-                                                              else trabajaEnLosProyectos r ps
+trabajaEnLosProyectos r (p:ps) = trabajaEnElProyecto r p ||  trabajaEnLosProyectos r ps
 
 trabajaEnElProyecto :: Rol -> Proyecto -> Bool 
 trabajaEnElProyecto rol proyecto = sonLosMismosProyectos (proyectoDeRol rol) proyecto
@@ -339,7 +361,7 @@ cantQueTrabajanEn ps (ConsEmpresa (r:rs)) = unoSi (trabajaEnLosProyectos r ps) +
 asignadosPorProyecto :: Empresa -> [(Proyecto, Int)] 
 -- Devuelve una lista de pares que representa a los proyectos (sin repetir) junto con su
 -- cantidad de personas involucradas 
-asignadosPorProyecto (ConsEmpresa (r:rs)) = asignadosPorCadaProyecto rs 
+asignadosPorProyecto (ConsEmpresa rs) = asignadosPorCadaProyecto rs 
 
 asignadosPorCadaProyecto :: [Rol] -> [(Proyecto, Int)] 
 asignadosPorCadaProyecto   []    = []
@@ -347,7 +369,7 @@ asignadosPorCadaProyecto  (r:rs) = consolidar (proyectoDeRol r) (asignadosPorCad
 
 consolidar :: Proyecto -> [(Proyecto, Int)] -> [(Proyecto, Int)] 
 consolidar   proyecto  []       = [(proyecto, 1)]
-consolidar   proyecto  (p:ps)   = if sonLosMismosProyectos (fst p) proyecto 
-                                  then (proyecto, snd p +1) : ps 
-                                  else  p : consolidar proyecto ps
+consolidar   proyecto  ((p,i):pis)   = if sonLosMismosProyectos  p proyecto 
+                                  then (proyecto, i +1) : pis 
+                                  else  (p,i) : consolidar proyecto pis
 
