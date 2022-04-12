@@ -20,9 +20,7 @@ conjuncion []      = True
 conjuncion (x:xs)  = x && conjuncion xs 
 
 
-
 disyuncion :: [Bool] -> Bool
-disyuncion []      = error "No hay elementos en la lista"
 disyuncion (b:[])  = b
 disyuncion (x:xs)  = x || disyuncion xs 
 
@@ -90,16 +88,23 @@ minimoEntre x y = if x < y
                   else y
 
 
---
-zipMaximos :: [Int] -> [Int] -> [Int]
+zipMaximos :: [Int] -> [Int] -> [Int]  
 {-Dadas dos listas de enteros, devuelve una lista donde el elemento en la posición n es el
 máximo entre el elemento n de la primera lista y de la segunda lista, teniendo en cuenta que
 las listas no necesariamente tienen la misma longitud.
 -}
-zipMaximos []       []           = []
-zipMaximos []       (n2:ns2)     = (n2:ns2)
-zipMaximos (n1:ns1) []           = (n1:ns1)
-zipMaximos (n1:ns1) (n2:ns2)     = maximoEntre n1 n2 : zipMaximos ns1 ns2 
+zipMaximos    []        _        = []
+zipMaximos    _         []       = []
+zipMaximos    (n1:ns1)  (n2:ns2) = maximoEntre n1 n2 : zipMaximos ns1 ns2
+
+
+--Recursión simultanea.
+--Esta función NO se usa. Es un ejemplo para ver la recursión simultanea.
+zipMaximosFeo :: [Int] -> [Int] -> [Int]
+zipMaximosFeo []        []          = []
+zipMaximosFeo []       (n2:ns2)     = (n2:ns2)
+zipMaximosFeo (n1:ns1) []           = (n1:ns1)
+zipMaximosFeo (n1:ns1) (n2:ns2)     = maximoEntre n1 n2 : zipMaximosFeo ns1 ns2 
                                   
 
 maximoEntre :: Ord a=> a -> a -> a 
@@ -123,8 +128,7 @@ repetir n a = a : repetir (n-1) a
 
 losPrimeros :: Int -> [a] -> [a] 
 --Precondición: La lista no es vacía y n es menor que la longitud de la lista dada.
-losPrimeros 0 []         = []
-losPrimeros 0 (x:xs)     = []
+losPrimeros 0 _         = []
 losPrimeros n (x:xs)     = x : losPrimeros (n-1) xs
 
 sinLosPrimeros :: Int -> [a] -> [a] 
@@ -226,12 +230,12 @@ esDelMismoTipo   Planta Planta  = True
 esDelMismoTipo   _  _           = False
 
 losQueLeGanan :: TipoDePokemon -> Entrenador -> Entrenador -> Int
-losQueLeGanan    tp (ConsEntrenador _  pok1) (ConsEntrenador _ pok2) = losQueLeGananATodos (pokemonesDeTipo tp pok1) pok2 
+losQueLeGanan    tp (ConsEntrenador _  pok1) (ConsEntrenador _ pok2) = cantDeLosQueLeGanan (pokemonesDeTipo tp pok1) pok2 
 
 
-losQueLeGananATodos :: [Pokemon] -> [Pokemon] -> Int 
-losQueLeGananATodos []     _     = 0
-losQueLeGananATodos (p:pks) pk2  = unoSi (superaATodos p pk2) + losQueLeGananATodos pks pk2
+cantDeLosQueLeGanan :: [Pokemon] -> [Pokemon] -> Int 
+cantDeLosQueLeGanan []     _     = 0
+cantDeLosQueLeGanan (p:pks) pk2  = unoSi (superaATodos p pk2) + cantDeLosQueLeGanan pks pk2
 
 superaATodos :: Pokemon -> [Pokemon] -> Bool 
 superaATodos  p []        = True
@@ -255,17 +259,18 @@ puedeSuperarA     Planta Agua    = True
 puedeSuperarA    _    _          = False 
 
 tienePokDeTipo :: Pokemon -> TipoDePokemon -> Bool 
-tienePokDeTipo  (ConsPokemon Agua _  ) Agua   = True
-tienePokDeTipo  (ConsPokemon Fuego _ ) Fuego  = True 
-tienePokDeTipo  (ConsPokemon Planta _) Planta = True 
-tienePokDeTipo  _                      _      = False  
+tienePokDeTipo  (ConsPokemon tipoPok _ ) tp  = esDelMismoTipo tipoPok tp
+
 
 esMaestroPokemon :: Entrenador -> Bool
 --Dado un entrenador, devuelve True si posee al menos un Pokémon de cada tipo posible.
 esMaestroPokemon (ConsEntrenador _ [])  = False 
-esMaestroPokemon (ConsEntrenador _ ps)  = (((cantPokemonEn Agua ps  ) >= 1)  && 
-                                          ((cantPokemonEn Fuego ps ) >= 1 )  && 
-                                          ((cantPokemonEn Planta ps) >= 1) )
+esMaestroPokemon (ConsEntrenador _ ps)  = hayPokemonDeTipo ps Agua && hayPokemonDeTipo ps Fuego 
+                                          && hayPokemonDeTipo ps Fuego
+
+hayPokemonDeTipo :: [Pokemon] -> TipoDePokemon  -> Bool
+hayPokemonDeTipo []     tipoPok = False
+hayPokemonDeTipo (p:ps) tipoPok = tienePokDeTipo p tipoPok || hayPokemonDeTipo ps tipoPok
 
 type NombreProyecto = String
 
@@ -297,18 +302,11 @@ empresa1 :: Empresa
 empresa1 = ConsEmpresa [rol1, rol2, rol3]  
 
 proyectos :: Empresa -> [Proyecto]
-proyectos (ConsEmpresa rs) = sinProyectosRepetidos (proyectoDeRoles rs) 
-
-
-sinProyectosRepetidos :: [Proyecto] -> [Proyecto] 
-sinProyectosRepetidos []     = []
-sinProyectosRepetidos (p:ps) = if elProyectoPertenece p ps
-                               then     sinProyectosRepetidos ps 
-                               else p : sinProyectosRepetidos ps 
+proyectos (ConsEmpresa rs) = sinProyectosRepetidosMejor (proyectoDeRoles rs) 
 
 sinProyectosRepetidosMejor :: [Proyecto] -> [Proyecto]
 sinProyectosRepetidosMejor []     = []
-sinProyectosRepetidosMejor (p:ps) = let ps' = sinProyectosRepetidos ps
+sinProyectosRepetidosMejor (p:ps) = let ps' = sinProyectosRepetidosMejor ps
                                      in if elProyectoPertenece p ps'
                                          then     ps'
                                          else p : ps' 
