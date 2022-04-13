@@ -72,7 +72,73 @@ esTesoro  _      = False
 
 pasosHastaTesoro :: Camino -> Int 
 --Precondición: Hay al menos un tesoro
-pasosHastaTesoro (Nada camino)       = 1 + (pasosHastaTesoro camino)
-pasosHastaTesoro (Cofre objs camino) =  if hayTesoroEnCofre objs 
-                                        then 0 
-                                        else 1 + pasosHastaTesoro camino
+pasosHastaTesoro  Fin           = 0
+pasosHastaTesoro (Nada c)       = 1 + pasosHastaTesoro c
+pasosHastaTesoro (Cofre objs c) = if hayTesoro c
+                                  then 1+ pasosHastaTesoro c
+                                  else pasosHastaTesoro c
+
+hayTesoroEn :: Int -> Camino -> Bool 
+hayTesoroEn n camino = pasosHastaTesoro camino == n
+
+alMenosNTesoros :: Int -> Camino -> Bool 
+alMenosNTesoros n camino = n <= cantidadDeTesoros camino
+
+
+cantidadDeTesoros :: Camino -> Int 
+cantidadDeTesoros Fin                  = 0
+cantidadDeTesoros (Nada camino)        = unoSi(hayTesoro camino) + cantidadDeTesoros camino
+cantidadDeTesoros (Cofre objs camino)  = cantidadDeTesorosEnCofre objs + cantidadDeTesoros camino
+
+cantidadDeTesorosEnCofre :: [Objeto] -> Int 
+cantidadDeTesorosEnCofre  []         = 0
+cantidadDeTesorosEnCofre  (obj:objs) = unoSi (esTesoro obj) + cantidadDeTesorosEnCofre objs
+
+data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
+
+arbolConUnNodo :: Tree Int 
+{-  .
+-}
+arbolConUnNodo = NodeT 1 (EmptyT) (EmptyT)
+
+arbolConUnNodoIzquierdo:: Tree Int
+{-
+   .  .
+  /    \
+ .      .
+-}
+--Preguntar como se representa un arbol.
+arbolConUnNodoIzquierdo = NodeT 1 (NodeT 2(NodeT 3 EmptyT EmptyT) (NodeT 5 EmptyT EmptyT)) (NodeT 6 (NodeT 7 EmptyT EmptyT ) EmptyT) 
+
+
+sumarT :: Tree Int -> Int 
+sumarT EmptyT          = 0
+sumarT (NodeT n t1 t2) = n + sumarT t1 + sumarT t2
+
+sizeT :: Tree Int -> Int 
+sizeT EmptyT           = 0
+sizeT (NodeT n t1 t2)  = 1 + (sizeT t1) + (sizeT t2) 
+
+mapDobleT :: Tree Int -> Tree Int
+mapDobleT EmptyT          = EmptyT
+mapDobleT (NodeT n t1 t2) = (NodeT (n*2) (mapDobleT t1) (mapDobleT t2))
+
+
+perteneceT :: Eq a => a -> Tree a -> Bool
+perteneceT x EmptyT           = False
+perteneceT x (NodeT n t1 t2)  = (x==n) || (perteneceT x t1) || (perteneceT x t2)
+
+aparicionesT :: Eq a => a -> Tree a -> Int
+aparicionesT  x EmptyT          = 0
+aparicionesT  x (NodeT n t1 t2) = if x == n  
+                                  then 1 + (aparicionesT x t1) + (aparicionesT x t2) 
+                                  else (aparicionesT x t1) + (aparicionesT x t2) 
+leaves :: Tree a -> [a]
+leaves EmptyT                  = []
+leaves (NodeT x EmptyT EmptyT) = [x] 
+leaves (NodeT x ti td)         = leaves ti ++ leaves td
+
+heightT :: Tree a -> Int
+heightT EmptyT                  = 0
+heightT (NodeT x EmptyT EmptyT) = 1
+heightT (NodeT x t1 t2)         = 1 + (heightT t1) + (heightT t2)

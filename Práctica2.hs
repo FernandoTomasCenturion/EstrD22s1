@@ -119,8 +119,9 @@ factorial 0 = 1
 factorial n = n * factorial (n-1) 
 
 cuentaRegresiva :: Int -> [Int] 
-cuentaRegresiva  0 = []
-cuentaRegresiva  n = n : (cuentaRegresiva (n -1)) 
+cuentaRegresiva  n =  if n < 1
+                      then []
+                       else n : (cuentaRegresiva (n -1)) 
 
 repetir :: Int -> a -> [a] 
 repetir 0 a = []
