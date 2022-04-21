@@ -122,16 +122,32 @@ data Cofre = Cofre [Objeto] deriving Show
 
 data Mapa = Fin Cofre | Bifurcacion Cofre Mapa Mapa deriving Show
 
+cofre1 = Cofre [Tesoro, Chatarra, Tesoro] 
+
+cofre2 = Cofre [Chatarra, Chatarra, Tesoro]
+
+cofre3 = Cofre [Chatarra, Tesoro, Chatarra]
+
+cofre5 = Cofre []
+
+mapa1 = Fin cofre1
+mapa2 = Fin cofre2
+
+mapa3 = Bifurcacion cofre3 mapa1 mapa2
+
+
+
 hayTesoro :: Mapa -> Bool
 hayTesoro (Fin cofre)               = hayTesoroEnCofre cofre 
-hayTesoro (Bifurcacion cofre mi md) = hayTesoroEnCofre cofre || hayTesoroEn mi || hayTesoroEn md
+hayTesoro (Bifurcacion cofre mi md) = hayTesoroEnCofre cofre || hayTesoro mi || hayTesoro md
+
 
 hayTesoroEnCofre :: Cofre -> Bool 
 hayTesoroEnCofre (Cofre objs) = hayTesoroEnObjetos objs 
 
 hayTesoroEnObjetos :: [Objeto] -> Bool 
 hayTesoroEnObjetos []         = False
-hayTesoroEnObjetos (obj:objs) = esTesoro || hayTesoroEnObjetos objs
+hayTesoroEnObjetos (obj:objs) = esTesoro obj || hayTesoroEnObjetos objs
 
 esTesoro :: Objeto -> Bool 
 esTesoro Tesoro = True 
@@ -146,9 +162,64 @@ hayTesoroEn (d:ds) (Bifurcacion cofre mi md) =
         Der -> hayTesoroEn ds md
 
 hayTesoroEnEstePunto :: Mapa -> Bool
-hayTesoroEnEstePunto (Fin c)             = hayTesoroEnCofre c 
-hayTesoroEnEstePunto (Bifurcacion c _ _) = hayTesoroEnCofre c
+hayTesoroEnEstePunto (Fin cofre)             = hayTesoroEnCofre cofre 
+hayTesoroEnEstePunto (Bifurcacion cofre _ _) = hayTesoroEnCofre cofre
+
 
 caminoAlTesoro :: Mapa -> [Dir]
-caminoAlTesoro mapa = .... 
+caminoAlTesoro (Fin cofre)               = []
+caminoAlTesoro (Bifurcacion cofre mi md) = if hayTesoroEnCofre cofre 
+                                            then [] 
+                                            else elegirCaminoAlTesoro (Bifurcacion cofre mi md)
 
+
+
+elegirCaminoAlTesoro :: Mapa -> [Dir]
+elegirCaminoAlTesoro (Bifurcacion cofre mi md) = if hayTesoro mi 
+                                                 then Izq : caminoAlTesoro mi 
+                                                 else Der : caminoAlTesoro md 
+
+
+caminoDeLaRamaMasLarga :: Mapa -> [Dir] 
+caminoDeLaRamaMasLarga (Fin cofre)               = []
+caminoDeLaRamaMasLarga (Bifurcacion cofre mi md) =  if heightM mi > heightM md 
+                                                    then Izq : caminoDeLaRamaMasLarga mi 
+                                                    else Der : caminoDeLaRamaMasLarga md      
+
+
+
+heightM :: Mapa -> Int
+heightM (Fin cofre)                    = 0
+heightM (Bifurcacion cofre mi md)      = 1 + max (heightM mi) (heightM md)
+
+tesorosPorNivel :: Mapa -> [[Objeto]] 
+tesorosPorNivel (Fin cofre)               = [tesorosEn cofre] 
+tesorosPorNivel (Bifurcacion cofre mi md) = tesorosEn cofre : juntarNiveles (tesorosPorNivel mi) (tesorosPorNivel md)
+
+
+tesorosEn :: Cofre -> [Objeto] 
+tesorosEn (Cofre objs) = filtrarTesorosEnObjetos objs
+
+
+filtrarTesorosEnObjetos :: [Objeto] -> [Objeto]
+filtrarTesorosEnObjetos []          = []
+filtrarTesorosEnObjetos (obj:objs)  = singularSi (esTesoro obj) obj ++ filtrarTesorosEnObjetos objs
+
+singularSi :: Bool -> a -> [a]
+singularSi True  x = [x]
+singularSi _ _     = []
+
+
+juntarNiveles :: [[a]] -> [[a]] -> [[a]]
+juntarNiveles []   yss          = yss ---Primero lista vacía y después el caso donde no está vacía.
+juntarNiveles xss     []        = xss
+juntarNiveles (xs:xss) (ys:yss) = (xs ++ ys)  :  juntarNiveles xss yss
+
+todosLosCaminos :: Mapa -> [[Dir]]
+todosLosCaminos (Fin cofre)               = []
+todosLosCaminos (Bifurcacion cofre mi md) = (prepend Izq (todosLosCaminos mi)) ++ (prepend Der (todosLosCaminos md))
+
+
+prepend :: Dir -> [[Dir]] -> [[Dir]]
+prepend d []       = []
+prepend d (dir:dirs) = (d:dir) : (prepend d dirs)

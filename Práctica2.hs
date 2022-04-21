@@ -21,7 +21,7 @@ conjuncion (x:xs)  = x && conjuncion xs
 
 
 disyuncion :: [Bool] -> Bool
-disyuncion (b:[])  = b
+disyuncion []      = False
 disyuncion (x:xs)  = x || disyuncion xs 
 
 aplanar :: [[a]] -> [a] 
@@ -93,9 +93,9 @@ zipMaximos :: [Int] -> [Int] -> [Int]
 máximo entre el elemento n de la primera lista y de la segunda lista, teniendo en cuenta que
 las listas no necesariamente tienen la misma longitud.
 -}
-zipMaximos    []        _        = []
-zipMaximos    _         []       = []
-zipMaximos    (n1:ns1)  (n2:ns2) = maximoEntre n1 n2 : zipMaximos ns1 ns2
+zipMaximos    []        ns2       = ns2
+zipMaximos    ns1         []      = ns1
+zipMaximos    (n1:ns1)  (n2:ns2)  = maximoEntre n1 n2 : zipMaximos ns1 ns2
 
 
 --Recursión simultanea.
@@ -133,7 +133,8 @@ repetir n a = a : repetir (n-1) a
 
 losPrimeros :: Int -> [a] -> [a] 
 --Precondición: La lista no es vacía y n es menor que la longitud de la lista dada.
-losPrimeros 0 _         = []
+losPrimeros 0 xs         = []
+losPrimeros n []         = []
 losPrimeros n (x:xs)     = x : losPrimeros (n-1) xs
 
 sinLosPrimeros :: Int -> [a] -> [a] 
@@ -234,6 +235,9 @@ esDelMismoTipo   Fuego Fuego    = True
 esDelMismoTipo   Planta Planta  = True
 esDelMismoTipo   _  _           = False
 
+esDelTipo :: TipoDePokemon -> Pokemon -> Bool 
+esDelTipo tipoPok (ConsPokemon tp _) = esDelMismoTipo tipoPok tp 
+
 losQueLeGanan :: TipoDePokemon -> Entrenador -> Entrenador -> Int
 losQueLeGanan    tp (ConsEntrenador _  pok1) (ConsEntrenador _ pok2) = cantDeLosQueLeGanan (pokemonesDeTipo tp pok1) pok2 
 
@@ -269,13 +273,15 @@ tienePokDeTipo  (ConsPokemon tipoPok _ ) tp  = esDelMismoTipo tipoPok tp
 
 esMaestroPokemon :: Entrenador -> Bool
 --Dado un entrenador, devuelve True si posee al menos un Pokémon de cada tipo posible.
-esMaestroPokemon (ConsEntrenador _ [])  = False 
-esMaestroPokemon (ConsEntrenador _ ps)  = hayPokemonDeTipo ps Agua && hayPokemonDeTipo ps Fuego 
-                                          && hayPokemonDeTipo ps Fuego
+esMaestroPokemon (ConsEntrenador _ pokemones) = hayUnPokemonDeCadaTipo pokemones
 
-hayPokemonDeTipo :: [Pokemon] -> TipoDePokemon  -> Bool
-hayPokemonDeTipo []     tipoPok = False
-hayPokemonDeTipo (p:ps) tipoPok = tienePokDeTipo p tipoPok || hayPokemonDeTipo ps tipoPok
+hayUnPokemonDeCadaTipo :: [Pokemon] -> Bool
+hayUnPokemonDeCadaTipo poks = hayPokemonDeTipo Agua poks && hayPokemonDeTipo Fuego poks && hayPokemonDeTipo Planta poks
+ 
+hayPokemonDeTipo :: TipoDePokemon -> [Pokemon] -> Bool 
+hayPokemonDeTipo tp []     = False
+hayPokemonDeTipo tp (p:ps) = esDelTipo tp p || hayPokemonDeTipo tp ps
+
 
 type NombreProyecto = String
 
