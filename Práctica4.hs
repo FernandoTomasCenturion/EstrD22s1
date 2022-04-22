@@ -1,3 +1,4 @@
+import Distribution.Simple.LocalBuildInfo (componentBuildDir)
 data Pizza = Prepizza | Capa Ingrediente Pizza deriving Show
  
 data Ingrediente = Salsa | Queso | Jamon | Aceitunas Int deriving Show 
@@ -37,7 +38,7 @@ esJamon _     = False
 
 tieneSoloSalsaYQueso :: Pizza -> Bool 
 tieneSoloSalsaYQueso  pizza = tieneQueso pizza && tieneSalsa pizza && 
-                              (not(tieneJamon pizza)) && (not (tieneAceitunas pizza))
+                              (not(tieneJamonYAceitunas pizza))
 
 tieneQueso :: Pizza -> Bool 
 tieneQueso Prepizza         = False 
@@ -55,19 +56,15 @@ esAceituna :: Ingrediente -> Bool
 esAceituna (Aceitunas _) = True 
 esAceituna _             = False
 
-tieneJamon :: Pizza -> Bool 
-tieneJamon Prepizza         = False 
-tieneJamon (Capa ing pizza) = esJamon ing || tieneJamon pizza
+tieneJamonYAceitunas :: Pizza -> Bool 
+tieneJamonYAceitunas Prepizza         = False 
+tieneJamonYAceitunas (Capa ing pizza) = esJamon ing || esAceituna ing || tieneJamonYAceitunas pizza
 
 
 tieneSalsa :: Pizza -> Bool 
 tieneSalsa Prepizza         = False 
 tieneSalsa (Capa ing pizza) = esSalsa ing || tieneSalsa pizza
 
-
-tieneAceitunas :: Pizza -> Bool 
-tieneAceitunas Prepizza         = False 
-tieneAceitunas (Capa ing pizza) = tieneAceitunas pizza || esAceituna ing
 
 
 duplicarAceitunas :: Pizza -> Pizza 
@@ -223,3 +220,187 @@ todosLosCaminos (Bifurcacion cofre mi md) = (prepend Izq (todosLosCaminos mi)) +
 prepend :: Dir -> [[Dir]] -> [[Dir]]
 prepend d []       = []
 prepend d (dir:dirs) = (d:dir) : (prepend d dirs)
+
+
+data Componente = LanzaTorpedos | Motor Int | Almacen [Barril]
+data Barril = Comida | Oxigeno | Torpedo | Combustible
+data Sector = S SectorId [Componente] [Tripulante]
+type SectorId = String
+type Tripulante = String
+data Tree a = EmptyT | NodeT a (Tree a) (Tree a)
+data Nave = N (Tree Sector)
+
+sectores :: Nave -> [SectorId]
+sectores (N treeSector) = sectoresDe treeSector 
+
+sectoresDe :: Tree Sector -> [SectorId]
+sectoresDe EmptyT               = []
+sectoresDe (NodeT sector si sd) = idDeSector sector : (sectoresDe si ++ sectoresDe sd)
+
+idDeSector :: Sector -> SectorId 
+idDeSector (S sectorId _ _ ) = sectorId
+
+poderDePropulsion :: Nave -> Int
+poderDePropulsion (N treeSector) = propulsionAcumuladaEntreSectores treeSector
+
+propulsionAcumuladaEntreSectores :: Tree Sector -> Int 
+propulsionAcumuladaEntreSectores EmptyT               = 0
+propulsionAcumuladaEntreSectores (NodeT sector si sd) = poderDeMotorDeSector sector + propulsionAcumuladaEntreSectores si + propulsionAcumuladaEntreSectores sd 
+
+poderDeMotorDeSector ::  Sector -> Int 
+poderDeMotorDeSector (S _ componentes _ ) = poderDeMotorEntreComponentes componentes
+
+
+poderDeMotorEntreComponentes :: [Componente] -> Int 
+poderDeMotorEntreComponentes []      = 0
+poderDeMotorEntreComponentes (c:cs)  = if esMotor c 
+                                       then poderDeMotor c + poderDeMotorEntreComponentes cs 
+                                       else poderDeMotorEntreComponentes cs
+
+esMotor :: Componente -> Bool 
+esMotor (Motor _ ) = True 
+esMotor _          = False                                
+
+poderDeMotor :: Componente -> Int 
+poderDeMotor (Motor potencia) = potencia 
+
+
+barriles :: Nave -> [Barril] 
+barriles (N treeSector) = listaDeBarriles treeSector 
+
+listaDeBarriles :: Tree Sector -> [Barril]
+listaDeBarriles EmptyT               = []
+listaDeBarriles (NodeT sector si sd) = barrilesDeSector sector ++ listaDeBarriles si ++ listaDeBarriles sd
+
+barrilesDeSector :: Sector -> [Barril] 
+barrilesDeSector (S _ componente _ ) =  barrilesDeLosComponentes componente
+
+barrilesDeLosComponentes :: [Componente] -> [Barril] 
+barrilesDeLosComponentes []     = []
+barrilesDeLosComponentes (c:cs) = if esAlmacen c 
+                                  then barrilesDeAlmacen c ++ barrilesDeLosComponentes cs 
+                                  else barrilesDeLosComponentes cs 
+
+esAlmacen :: Componente -> Bool 
+esAlmacen (Almacen xs ) = True 
+esAlmacen _            = False 
+
+barrilesDeAlmacen :: Componente -> [Barril] 
+barrilesDeAlmacen (Almacen barriles ) = barriles 
+
+agregarASector :: [Componente] -> SectorId -> Nave -> Nave
+agregarASector cs sId (N treeSector) = N (buscarSectorYAgregarComponentes cs sId treeSector) 
+
+buscarSectorYAgregarComponentes :: [Componente] -> SectorId -> Tree Sector -> Tree Sector
+buscarSectorYAgregarComponentes cs sid EmptyT               = EmptyT
+buscarSectorYAgregarComponentes cs sid (NodeT sector si sd) = if sid == idDeSector sector 
+                                                              then NodeT (agregarEnSectorActual sector cs) si sd 
+                                                              else  NodeT sector (buscarSectorYAgregarComponentes cs sid si) (buscarSectorYAgregarComponentes cs sid sd)
+
+asignarTripulanteA :: Tripulante -> [SectorId] -> Nave -> Nave
+asignarTripulanteA nTrip listIdS (N treeSector) = N (sectoresLuegoDeAsignacion nTrip listIdS treeSector)
+
+sectoresLuegoDeAsignacion :: Tripulante -> [SectorId] -> Tree Sector -> Tree Sector 
+sectoresLuegoDeAsignacion nTrip listIdS EmptyT = EmptyT
+sectoresLuegoDeAsignacion nTrip [] treeSector = treeSector
+sectoresLuegoDeAsignacion nTrip listIdS (NodeT sector si sd) = 
+    if perteneceSector (idDeSector sector) listIdS
+        then NodeT (asignarAlTripulanteEnSector nTrip sector) (sectoresLuegoDeAsignacion nTrip listIdS si) (sectoresLuegoDeAsignacion nTrip listIdS sd)
+        else NodeT sector (sectoresLuegoDeAsignacion nTrip listIdS si) (sectoresLuegoDeAsignacion nTrip listIdS sd)  
+
+
+perteneceSector :: SectorId -> [SectorId] -> Bool 
+perteneceSector sectorId []         = False
+perteneceSector sectorId (sid:sids) = sectorId == sid || perteneceSector sid sids
+ 
+asignarAlTripulanteEnSector :: Tripulante -> Sector -> Sector 
+asignarAlTripulanteEnSector nTrip (S id comps tripulacion) = S id comps (nTrip : tripulacion)
+
+agregarEnSectorActual :: Sector -> [Componente] -> Sector
+agregarEnSectorActual (S sid componentes trip) compNuevos =(S sid (componentes ++ compNuevos) trip) 
+
+
+sectoresAsignados :: Tripulante -> Nave -> [SectorId]
+sectoresAsignados tripBuscado (N treeSector) = losSectoresDelTripulante tripBuscado treeSector
+
+losSectoresDelTripulante :: Tripulante -> Tree Sector -> [SectorId]
+losSectoresDelTripulante tripBuscado EmptyT = []
+losSectoresDelTripulante tripBuscado (NodeT sector si sd) = 
+    if tieneAsignacionEnSector tripBuscado sector 
+        then (idDeSector sector) : (losSectoresDelTripulante tripBuscado si ++ losSectoresDelTripulante tripBuscado sd)
+        else losSectoresDelTripulante tripBuscado si ++ losSectoresDelTripulante tripBuscado sd
+
+tieneAsignacionEnSector :: Tripulante -> Sector -> Bool 
+tieneAsignacionEnSector tripBuscado (S _ _ tripulantes) = elTripulantePertenece tripBuscado tripulantes
+
+
+tripulantes :: Nave -> [Tripulante]
+tripulantes (N treeSector) = tripulantesDe treeSector 
+
+tripulantesDe :: Tree Sector -> [Tripulante] 
+tripulantesDe EmptyT               = []
+tripulantesDe (NodeT sector si sd) = sinTripulantesRepetidos (tripulantesDelSector sector ++ tripulantesDe si ++ tripulantesDe sd) 
+
+tripulantesDelSector :: Sector -> [Tripulante]
+tripulantesDelSector (S _ _ trip)  = trip 
+
+
+sinTripulantesRepetidos :: [Tripulante] -> [Tripulante]
+sinTripulantesRepetidos []     = []
+sinTripulantesRepetidos (t:ts) = let ts' = sinTripulantesRepetidos ts
+                                     in if elTripulantePertenece t ts'
+                                        then     ts'
+                                        else t : ts'  
+                            
+elTripulantePertenece ::  Tripulante -> [Tripulante] -> Bool 
+elTripulantePertenece   trip []     = False    
+elTripulantePertenece   trip (t:ts) = (trip == t) || elTripulantePertenece trip ts 
+
+
+type Presa = String -- nombre de presa
+type Territorio = String -- nombre de territorio
+type Nombre = String -- nombre de lobo
+data Lobo = Cazador Nombre [Presa] Lobo Lobo Lobo | Explorador Nombre [Territorio] Lobo Lobo | Cria Nombre
+data Manada = M Lobo
+
+
+manada :: Manada
+manada = M (Cazador "caz1" [] (Explorador "ex1" [](Cria "criaEx1")(Cria"criaEx2"))(Explorador "ex1" [](Cria "criaEx3")(Cria"criaEx4"))(Cria "criaCaz"))
+
+
+
+buenaCaza :: Manada -> Bool
+buenaCaza (M lobo) = cantidadDePresas lobo > cantidadDeCrias lobo
+
+cantidadDePresas :: Lobo -> Int
+cantidadDePresas (Cria _)                         = 0
+cantidadDePresas (Explorador _ _ lob1 lob2)       = (cantidadDePresas lob1)+(cantidadDePresas lob2)
+cantidadDePresas (Cazador _ presa lob1 lob2 lob3) = cantPresa presa +(cantidadDePresas lob1)+(cantidadDePresas lob2)+(cantidadDePresas lob3)
+
+
+cantPresa :: [Presa] -> Int
+cantPresa ps = length ps
+
+cantidadDeCrias :: Lobo ->Int
+cantidadDeCrias (Cria _)                     = 1
+cantidadDeCrias (Explorador _ _ lob1 lob2)   = (cantidadDeCrias lob1 ) + (cantidadDeCrias lob2)
+cantidadDeCrias (Cazador _ _ lob1 lob2 lob3) = cantidadDeCrias lob1 + cantidadDeCrias lob2 + cantidadDeCrias lob3
+
+elAlfa :: Manada -> (Nombre, Int) 
+elAlfa  (M lobo) = elAlfaLobo lobo 
+
+
+elAlfaLobo :: Lobo -> (Nombre, Int) 
+elAlfaLobo (Cria nombre) = (nombre, 0)
+elAlfaLobo (Cazador nombre presa lobo1 lobo2 lobo3) =
+    maximo
+    (maximo (nombre, length presa) (elAlfaLobo lobo1))
+    (maximo (elAlfaLobo lobo2 ) (elAlfaLobo lobo3))
+
+elAlfaLobo (Explorador nombre territorios lobo1 lobo2) =
+    maximo
+    (maximo (nombre, 0) (elAlfaLobo lobo1))
+    (elAlfaLobo lobo2) 
+
+maximo :: (Nombre, Int ) -> (Nombre , Int )  -> (Nombre , Int ) 
+maximo  (name1, nro1) (name2, nro2) = if  nro1 > nro2 then (name1, nro1) else (name2, nro2)  
