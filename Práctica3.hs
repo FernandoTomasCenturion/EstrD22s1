@@ -27,8 +27,7 @@ bolitaEsDelMismoColor  Rojo Rojo = True
 bolitaEsDelMismoColor  _    _    = False
 
 poner :: Color -> Celda -> Celda
-poner c  CeldaVacia           = (Bolita c CeldaVacia)
-poner c (Bolita color celda)  = (Bolita c(Bolita color celda))
+poner c celda = Bolita c celda  
 
 sacar :: Color -> Celda -> Celda 
 sacar c CeldaVacia           = CeldaVacia 
@@ -55,12 +54,13 @@ camino2 = Cofre [Cacharro, Cacharro, Tesoro] camino1
 
 --- Preguntar sobre las pruebas.
 camino3 :: Camino 
-camino3 = Cofre [Cacharro, Cacharro] camino2 
+camino3 = Cofre [Cacharro, Cacharro] camino2
+
 
 hayTesoro :: Camino -> Bool
-hayTesoro (Cofre objs camino) = hayTesoroEnCofre objs 
 hayTesoro Fin                 = False
-hayTesoro (Nada camino)       = False || hayTesoro camino
+hayTesoro (Cofre objs camino) = hayTesoroEnCofre objs || hayTesoro camino
+hayTesoro (Nada camino)       = hayTesoro camino
 
 hayTesoroEnCofre :: [Objeto] -> Bool 
 hayTesoroEnCofre []         = False
@@ -79,20 +79,41 @@ pasosHastaTesoro (Cofre objs c) = if hayTesoro c
                                   else pasosHastaTesoro c
 
 hayTesoroEn :: Int -> Camino -> Bool 
-hayTesoroEn n camino = pasosHastaTesoro camino == n
+hayTesoroEn 0 camino              = hayCofreEnPuntoActual camino 
+hayTesoroEn n Fin                 = False 
+hayTesoroEn n (Nada camino)       = hayTesoroEn (n-1) camino 
+hayTesoroEn n (Cofre objs camino) = hayTesoroEn (n-1) camino 
+
+hayCofreEnPuntoActual :: Camino -> Bool 
+hayCofreEnPuntoActual Fin                 = False 
+hayCofreEnPuntoActual (Nada camino)       = False 
+hayCofreEnPuntoActual (Cofre objs camino) = hayTesoroEnCofre objs
 
 alMenosNTesoros :: Int -> Camino -> Bool 
-alMenosNTesoros n camino = n <= cantidadDeTesoros camino
+alMenosNTesoros n Fin                 = False
+alMenosNTesoros n (Nada camino)       = alMenosNTesoros n camino
+alMenosNTesoros n (Cofre objs camino) = cantidadDeTesorosEnObjetos objs >= n || alMenosNTesoros (n-cantidadDeTesorosEnObjetos objs) camino
+
+cantidadDeTesorosEnObjetos :: [Objeto] -> Int 
+cantidadDeTesorosEnObjetos  []         = 0
+cantidadDeTesorosEnObjetos  (obj:objs) = unoSi (esTesoro obj) + cantidadDeTesorosEnObjetos objs
 
 
-cantidadDeTesoros :: Camino -> Int 
-cantidadDeTesoros Fin                  = 0
-cantidadDeTesoros (Nada camino)        = unoSi(hayTesoro camino) + cantidadDeTesoros camino
-cantidadDeTesoros (Cofre objs camino)  = cantidadDeTesorosEnCofre objs + cantidadDeTesoros camino
+cantTesorosEntre :: Int -> Int -> Camino -> Int 
+cantTesorosEntre  n z camino = cantTesorosEnCamino (n-z) (avanzarPasosHasta n camino) 
 
-cantidadDeTesorosEnCofre :: [Objeto] -> Int 
-cantidadDeTesorosEnCofre  []         = 0
-cantidadDeTesorosEnCofre  (obj:objs) = unoSi (esTesoro obj) + cantidadDeTesorosEnCofre objs
+avanzarPasosHasta :: Int -> Camino -> Camino 
+avanzarPasosHasta 0 camino              = camino
+avanzarPasosHasta n Fin                 = Fin
+avanzarPasosHasta n (Nada camino)       = avanzarPasosHasta (n-1) camino
+avanzarPasosHasta n (Cofre objs camino) = avanzarPasosHasta (n-1) camino 
+
+cantTesorosEnCamino :: Int -> Camino -> Int 
+cantTesorosEnCamino 0 camino              = 0 
+cantTesorosEnCamino n Fin                 = 0 
+cantTesorosEnCamino n (Nada camino)       = cantTesorosEnCamino (n-1) camino
+cantTesorosEnCamino n (Cofre objs camino) = cantidadDeTesorosEnObjetos objs + cantTesorosEnCamino(n-1) camino
+
 
 data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
 
@@ -155,23 +176,20 @@ leaves (NodeT x ti td)         = leaves ti ++ leaves td
 
 heightT :: Tree a -> Int
 heightT EmptyT                  = 0
-heightT (NodeT x EmptyT EmptyT) = 1
-heightT (NodeT x t1 t2)         = 1 + (heightT t1) + (heightT t2)
+heightT (NodeT x t1 t2)         = 1 + max (heightT t1) (heightT t2)
 
 mirrorT :: Tree a -> Tree a 
-mirrorT EmptyT                  = EmptyT 
-mirrorT (NodeT x EmptyT EmptyT) = (NodeT x EmptyT         EmptyT     ) 
-mirrorT (NodeT x ti     td    ) = (NodeT x (mirrorT td ) (mirrorT ti))
+mirrorT EmptyT             = EmptyT 
+mirrorT (NodeT x ti td)    = NodeT x (mirrorT td ) (mirrorT ti)
 
 toList :: Tree a -> [a]
-toList EmptyT                  = []
-toList (NodeT x EmptyT EmptyT) = [x]
-toList (NodeT x ti td        ) = x : (toList ti) ++ (toList td)
+toList EmptyT             = []
+toList (NodeT x ti td)    = toList ti ++ [x] ++ toList td 
 
 levelN :: Int -> Tree a -> [a]
 levelN   _  EmptyT          = []
-levelN   0  (NodeT x _ _  ) = [x]
-levelN   n  (NodeT x ti td) = x : ((levelN (n-1) ti) ++ (levelN (n-1) td))
+levelN   0  (NodeT x ti td) = [x]
+levelN   n  (NodeT x ti td) = levelN (n-1) ti ++ levelN (n-1) td
 
 -- [[1] [2,3] [4,5,6,7]] [[2] [3,4] [4,5,6,7]] 
 -- [[1,2] [2,3,3,4] [4,5,6,7,4,5,6,7]] 
@@ -188,18 +206,23 @@ juntarNiveles (xs:xss) (ys:yss) = (xs ++ ys)  :  juntarNiveles xss yss
 
 
 ramaMasLarga :: Tree a -> [a]
-ramaMasLarga EmptyT          = []
-ramaMasLarga (NodeT x ti td) =  if heightT ti >= heightT td   
-                                then x : ramaMasLarga ti 
-                                else x : ramaMasLarga td
+ramaMasLarga  EmptyT         = []
+ramaMasLarga (NodeT x ti td) = if esLaRamaMasLarga ti td
+                                 then x : ramaMasLarga ti 
+                                 else x : ramaMasLarga td
+
+
+esLaRamaMasLarga :: Tree a -> Tree a -> Bool 
+esLaRamaMasLarga tree1 tree2 = heightT tree1 > heightT tree2
+
 
 todosLosCaminos :: Tree a -> [[a]]
 todosLosCaminos EmptyT                  = []
 todosLosCaminos (NodeT x EmptyT EmptyT) = [[x]]
-todosLosCaminos (NodeT x ti td)         = prepend x (todosLosCaminos ti ++ todosLosCaminos td)
+todosLosCaminos (NodeT x ti td)         = prepend x ((todosLosCaminos ti) ++ (todosLosCaminos td))
 
 prepend :: a -> [[a]] -> [[a]]
-prepend element []       = []
+prepend element []       = [[element]]
 prepend element (xs:xss) = (element:xs) : prepend element xss
 
 
