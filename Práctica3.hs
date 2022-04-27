@@ -100,7 +100,7 @@ cantidadDeTesorosEnObjetos  (obj:objs) = unoSi (esTesoro obj) + cantidadDeTesoro
 
 
 cantTesorosEntre :: Int -> Int -> Camino -> Int 
-cantTesorosEntre  n z camino = cantTesorosEnCamino (n-z) (avanzarPasosHasta n camino) 
+cantTesorosEntre  n z camino = cantTesorosEnPosicion (n-z) (avanzarPasosHasta n camino) 
 
 avanzarPasosHasta :: Int -> Camino -> Camino 
 avanzarPasosHasta 0 camino              = camino
@@ -108,11 +108,11 @@ avanzarPasosHasta n Fin                 = Fin
 avanzarPasosHasta n (Nada camino)       = avanzarPasosHasta (n-1) camino
 avanzarPasosHasta n (Cofre objs camino) = avanzarPasosHasta (n-1) camino 
 
-cantTesorosEnCamino :: Int -> Camino -> Int 
-cantTesorosEnCamino 0 camino              = 0 
-cantTesorosEnCamino n Fin                 = 0 
-cantTesorosEnCamino n (Nada camino)       = cantTesorosEnCamino (n-1) camino
-cantTesorosEnCamino n (Cofre objs camino) = cantidadDeTesorosEnObjetos objs + cantTesorosEnCamino(n-1) camino
+cantTesorosEnPosicion :: Int -> Camino -> Int 
+cantTesorosEnPosicion 0 camino              = 0 
+cantTesorosEnPosicion n Fin                 = 0 
+cantTesorosEnPosicion n (Nada camino)       = cantTesorosEnPosicion (n-1) camino
+cantTesorosEnPosicion n (Cofre objs camino) = cantidadDeTesorosEnObjetos objs + cantTesorosEnPosicion(n-1) camino
 
 
 data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
@@ -207,23 +207,22 @@ juntarNiveles (xs:xss) (ys:yss) = (xs ++ ys)  :  juntarNiveles xss yss
 
 ramaMasLarga :: Tree a -> [a]
 ramaMasLarga  EmptyT         = []
-ramaMasLarga (NodeT x ti td) = if esLaRamaMasLarga ti td
-                                 then x : ramaMasLarga ti 
-                                 else x : ramaMasLarga td
+ramaMasLarga (NodeT x ti td) = x : (maximoLongitudEntreListas (ramaMasLarga ti) (ramaMasLarga td))
 
 
-esLaRamaMasLarga :: Tree a -> Tree a -> Bool 
-esLaRamaMasLarga tree1 tree2 = heightT tree1 > heightT tree2
+maximoLongitudEntreListas :: [a] -> [a] -> [a]
+maximoLongitudEntreListas l1 l2  = if length l1 > length l2 
+                                   then l1 
+                                   else l2
 
 
 todosLosCaminos :: Tree a -> [[a]]
 todosLosCaminos EmptyT                  = []
-todosLosCaminos (NodeT x EmptyT EmptyT) = [[x]]
-todosLosCaminos (NodeT x ti td)         = prepend x ((todosLosCaminos ti) ++ (todosLosCaminos td))
+todosLosCaminos (NodeT x ti td)         = agregarEnTodos x ((todosLosCaminos ti) ++ (todosLosCaminos td))
 
-prepend :: a -> [[a]] -> [[a]]
-prepend element []       = [[element]]
-prepend element (xs:xss) = (element:xs) : prepend element xss
+agregarEnTodos :: a -> [[a]] -> [[a]]
+agregarEnTodos element []       = [[element]]
+agregarEnTodos element (xs:xss) = (element:xs) : agregarEnTodos element xss
 
 
 
