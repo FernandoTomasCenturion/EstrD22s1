@@ -100,7 +100,7 @@ cantidadDeTesorosEnObjetos  (obj:objs) = unoSi (esTesoro obj) + cantidadDeTesoro
 
 
 cantTesorosEntre :: Int -> Int -> Camino -> Int 
-cantTesorosEntre  n z camino = cantTesorosEnPosicion (n-z) (avanzarPasosHasta n camino) 
+cantTesorosEntre  n z camino = cantTesorosHasta (n-z) (avanzarPasosHasta n camino) 
 
 avanzarPasosHasta :: Int -> Camino -> Camino 
 avanzarPasosHasta 0 camino              = camino
@@ -108,11 +108,11 @@ avanzarPasosHasta n Fin                 = Fin
 avanzarPasosHasta n (Nada camino)       = avanzarPasosHasta (n-1) camino
 avanzarPasosHasta n (Cofre objs camino) = avanzarPasosHasta (n-1) camino 
 
-cantTesorosEnPosicion :: Int -> Camino -> Int 
-cantTesorosEnPosicion 0 camino              = 0 
-cantTesorosEnPosicion n Fin                 = 0 
-cantTesorosEnPosicion n (Nada camino)       = cantTesorosEnPosicion (n-1) camino
-cantTesorosEnPosicion n (Cofre objs camino) = cantidadDeTesorosEnObjetos objs + cantTesorosEnPosicion(n-1) camino
+cantTesorosHasta :: Int -> Camino -> Int 
+cantTesorosHasta 0 camino              = 0 
+cantTesorosHasta n Fin                 = 0 
+cantTesorosHasta n (Nada camino)       = cantTesorosHasta (n-1) camino
+cantTesorosHasta n (Cofre objs camino) = cantidadDeTesorosEnObjetos objs + cantTesorosHasta(n-1) camino
 
 
 data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
