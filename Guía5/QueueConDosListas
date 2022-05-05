@@ -1,0 +1,17 @@
+module Queue (Queue)
+
+where 
+
+data Queue a = ConsQ [a] [a] -- La primera lista es fs y la segunda es bs.
+
+{-
+Inv. Representación: Si la primera lista(fs) esta vacía, entonces la cola se encuenta vacía.
+-}
+
+
+instance Show a => Show (Queue a) where 
+    show (ConsQ xs) = "{" ++ mostrar xs ++ "}"
+
+emptyQ :: Queue a 
+emptyQ = ConsQ [] []    
+
