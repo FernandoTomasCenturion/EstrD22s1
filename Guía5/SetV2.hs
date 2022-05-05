@@ -62,7 +62,7 @@ belongs x (ConsS xs) = pertenece x xs
 sizeS :: Eq a => Set a -> Int
 sizeS (ConsS xs) = longitud xs 
 
-
+--O(n) siendo n la cantidad de elementos de la lista del set dado.
 removeS :: Eq a => a -> Set a -> Set a
 removeS e (ConsS xs) = ConsS (removeL e xs) 
 
@@ -75,13 +75,13 @@ removeL e (x:xs) =  if e == x
 
 --O(n*m) siendo n la cantidad de elementos de la lista del set1 y m la cantidad de elementos de la lista del set2.
 unionS :: Eq a => Set a -> Set a -> Set a
-unionS (ConsS xs) s2  = agregarAlTodosSet xs s
+unionS (ConsS xs) s2  = agregarAlTodosSet xs s2
 
 --O(n) siendo n la cantidad de elementos de la lista que
 agregarAlTodosSet :: Eq a => [a] -> Set a -> Set a
 agregarAlTodosSet [] set     = set
-agregarAlTodosSet (x:xs) set = add x (agregarAlTodosSet xs set)
+agregarAlTodosSet (x:xs) set = addS x (agregarAlTodosSet xs set)
 
 --O(1)
 setToList :: Eq a => Set a -> [a]
-setToList (S xs) = xs
+setToList (ConsS xs) = xs
