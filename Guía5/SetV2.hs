@@ -2,69 +2,44 @@ module Set (Set, emptyS, addS, belongs, sizeS, removeS, unionS, setToList)
 
 where 
 
-data Set a = ConsS [a] 
+data Set a = ConsS [a] Int deriving Show
 
 {-
 Inv: La lista que esta dentro de la estructura del set no contiene elementos repetidos.
+     El int dentro de la estructura guarda la cantidad de elementos dentro de la estructura.
 -}
 
-----Ejemplos para probar de sets sin repetidos.
-s1 :: Set Int
-s1 = ConsS [1,2,3,4,5]
+s1 :: Set Int 
+s1 = ConsS [1,2,3,4,5] 5
 
-s2 :: Set Int
-s2 = ConsS [7,8,9,1]
-
---Funciones auxiliares
---O(n*m), siendo n la cantidad de elementos y siendo m el costo que hereda de la función Pertenece
-sinRepetidosMejor :: Eq a => [a] -> [a]
-sinRepetidosMejor []     = []
-sinRepetidosMejor (x:xs) = let xs' = sinRepetidosMejor xs
-                                     in if pertenece x xs'
-                                         then     xs'
-                                         else x : xs' 
-
---O(m), siendo m la cantidad de elementos de la lista.
-pertenece :: Eq a => a -> [a] -> Bool 
-pertenece   a []     = False    
-pertenece   a (x:xs) = a == x || pertenece a xs 
-
---O(n), siendo n la cantidad de elementos de la lista.
-longitud :: [a] -> Int 
-longitud []     = 0
-longitud (x:xs) = 1 + longitud xs 
-
-
-
-instance Show a => Show (Set a) where 
-    show (ConsS xs) = "{" ++ mostrar xs ++ "}"
-
-mostrar []    = ""
-mostrar [x]   = show x 
-mostrar(x:xs) =  show x ++ "," ++ mostrar xs
+s2 :: Set Int 
+s2 = ConsS [7,8,9,1] 4
 
 --O(1)
 emptyS :: Set a 
-emptyS = ConsS [] 
+emptyS = ConsS [] 0
+
+pertenece :: Eq a => a -> [a] -> Bool 
+pertenece x ys = elem x (ys)
 
 
---O(m*n) siendo m el costo de la función pertenece y n siendo la longitud de la lista del set.
+--O(n)-- preguntar como justificar cuando se fija si un elemento esta dentro de una lista ,y si no esta lo agrega.
 addS :: Eq a => a -> Set a -> Set a 
-addS e (ConsS xs) = if pertenece e xs 
-                       then ConsS xs
-                       else ConsS (e:xs)
+addS e (ConsS xs n) = if pertenece e xs 
+                       then ConsS xs n
+                       else ConsS (e:xs) n
 
 --O(m) siendo m la cantidad de elementos de la lista del set.
 belongs :: Eq a => a -> Set a -> Bool 
-belongs x (ConsS xs) = pertenece x xs
+belongs x (ConsS xs n) = pertenece x xs
 
 --Orden(n), siendo n la cantidad de elementos del conjunto.
 sizeS :: Eq a => Set a -> Int
-sizeS (ConsS xs) = longitud xs 
+sizeS (ConsS xs n) = length xs
 
 --O(n) siendo n la cantidad de elementos de la lista del set dado.
 removeS :: Eq a => a -> Set a -> Set a
-removeS e (ConsS xs) = ConsS (removeL e xs) 
+removeS e (ConsS xs n) = ConsS (removeL e xs) n
 
 --O(n) siendo n la cantidad de elementos de la lista
 removeL :: Eq a => a -> [a] -> [a]
@@ -73,15 +48,24 @@ removeL e (x:xs) =  if e == x
                         then xs 
                         else x : (removeL e xs)
 
---O(n*m) siendo n la cantidad de elementos de la lista del set1 y m la cantidad de elementos de la lista del set2.
+--O(n*m), siendo n la cantidad de elementos del primer set y m la cantidad de elementos del segundo set.
 unionS :: Eq a => Set a -> Set a -> Set a
-unionS (ConsS xs) s2  = agregarAlTodosSet xs s2
+unionS (ConsS xs n1) (ConsS ys n2)  = let newList = unirListasSinRepetidos xs ys 
+                                      in ConsS newList (length newList)
 
---O(n) siendo n la cantidad de elementos de la lista que
-agregarAlTodosSet :: Eq a => [a] -> Set a -> Set a
-agregarAlTodosSet [] set     = set
-agregarAlTodosSet (x:xs) set = addS x (agregarAlTodosSet xs set)
+--O(n*m) siendo n la cantidad de elementos de la primera lista dada y m la cantidad de elementos de la segunda lista dada
+unirListasSinRepetidos ::  Eq a => [a] -> [a] -> [a] 
+unirListasSinRepetidos xs     [] = xs
+unirListasSinRepetidos (x:xs) ys = agregarSiNoEsta x (unirListasSinRepetidos xs ys)
 
---O(1)
+--O(n), siendo n la cantidad de elementos de la lista.
+agregarSiNoEsta :: Eq a => a -> [a] -> [a] 
+agregarSiNoEsta element []     = element : []
+agregarSiNoEsta element (x:xs) = if element == x
+                                 then (x:xs) 
+                                 else x : agregarSiNoEsta element xs
+
+
+--O(n²), siendo n la cantidad elementos que se agregaron al 
 setToList :: Eq a => Set a -> [a]
-setToList (ConsS xs) = xs
+setToList (ConsS xs n) = sinRepetidos xs 

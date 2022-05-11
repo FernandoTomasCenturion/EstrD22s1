@@ -36,14 +36,14 @@ top (ConsStack xs) = head xs
 
 --O(1)
 pop :: Stack a -> Stack a
-pop (ConsStack []) = emptyS
+--Precondición: La lista de la pila no debe estar vacía.
 pop (ConsStack xs) = (ConsStack (tail xs))
 
---O(n) siendo n la cantidad de elementos de la lista.
+--O(n) siendo n la cantidad de elementos de la lista de la pila.
 lenS :: Stack a -> Int
 lenS (ConsStack xs) = longitud xs 
 
---O(n) siendo n la cantidad de elementos de la lista.
+--O(n) siendo n la cantidad de elementos de la lista de la pila.
 longitud :: [a] -> Int 
 longitud []     = 0
 longitud (x:xs) = 1 + longitud xs 
