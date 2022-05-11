@@ -15,16 +15,17 @@ En el caso de tener un Int en la representacion, n es la cantidad de elemetos DI
 {-
 Inv. Rep: No tiene.
 -}
-
+--O(m)
 pertenece :: Eq a => a -> [a] -> Bool 
 pertenece   a []     = False    
 pertenece   a (x:xs) = a == x || pertenece a xs 
 
-
+--O(n)
 longitud :: [a] -> Int 
 longitud []     = 0
 longitud (x:xs) = 1 + longitud xs 
 
+--O(n*m)
 sinRepetidosMejor :: Eq a => [a] -> [a]
 sinRepetidosMejor []     = []
 sinRepetidosMejor (x:xs) = let xs' = sinRepetidosMejor xs

@@ -2,7 +2,7 @@
 head’ :: [a] -> a
 head’ (x:xs) = x
 
---Costo O(n), siendo n la cantidad de números.
+--Costo O(1)
 sumar :: Int -> Int
 sumar x = x + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
 
@@ -17,7 +17,7 @@ longitud []     = 0
 longitud (x:xs) = 1 + longitud xs
 
 
---O(n*m), siendo n la longitud de la primera lista y m el costo de la función factorial.
+--O(n*m), siendo n la longitud de la primera lista y m la suma de todos los números de la lista (en peor caso).
 factoriales :: [Int] -> [Int]
 factoriales []     = []
 factoriales (x:xs) = factorial x : factoriales xs
@@ -27,14 +27,14 @@ pertenece :: Eq a => a -> [a] -> Bool
 pertenece n []     = False
 pertenece n (x:xs) = n == x || pertenece n xs
 
---O(n*m), siendo n la cantidad de longitud de la lista y m es el costo de la función pertenece.
+--O(n²), siendo n la longitud de la lista. Sin repetidos usa pertenece, que es otra función de costo lineal.
 sinRepetidos :: Eq a => [a] -> [a]
 sinRepetidos []     = []
 sinRepetidos (x:xs) = if pertenece x xs
                       then sinRepetidos xs
                       else x : sinRepetidos xs
 
---O(n), siendo n la longitud de la lista.
+--O(n), siendo n la longitud de elementos de la primer lista dada.
 -- equivalente a (++)
 append :: [a] -> [a] -> [a]
 append [] ys    = ys
@@ -45,19 +45,19 @@ concatenar :: [String] -> String
 concatenar []     = []
 concatenar (x:xs) = x ++ concatenar xs
 
---O(n), siendo n la cantidad de elementos de la lista.
+--O(n), siendo n el número dado por parámetro
 takeN :: Int -> [a] -> [a]
 takeN 0 xs     = []
 takeN n []     = []
 takeN n (x:xs) = x : takeN (n-1) xs
 
---O(n), siendo n la cantidad de elementos de la lista.
+--O(n), siendo n el número dado por parámetro
 dropN :: Int -> [a] -> [a]
 dropN 0 xs = xs
 dropN n [] = []
 dropN n (x:xs) = dropN (n-1) xs
 
---O(n*m), siendo n la longitud de la primera lista y m la longitud de la segunda lista.
+--O(n), siendo n la longitud de la lista dada.
 partir :: Int -> [a] -> ([a], [a])
 partir n xs = (takeN n xs, dropN n xs)
 
