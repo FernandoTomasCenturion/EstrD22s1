@@ -1,4 +1,3 @@
-import Distribution.Simple.LocalBuildInfo (componentBuildDir)
 data Pizza = Prepizza | Capa Ingrediente Pizza deriving Show
  
 data Ingrediente = Salsa | Queso | Jamon | Aceitunas Int deriving Show 
@@ -36,9 +35,12 @@ esJamon :: Ingrediente -> Bool
 esJamon Jamon = True 
 esJamon _     = False 
 
-tieneSoloSalsaYQueso :: Pizza -> Bool 
-tieneSoloSalsaYQueso  pizza = tieneQueso pizza && tieneSalsa pizza && 
-                              (not(tieneJamonYAceitunas pizza))
+noTieneNingunIngredienteQueNoSeanSalsaYQueso :: Pizza -> Bool 
+noTieneNingunIngredienteQueNoSeanSalsaYQueso  Prepizza     = True 
+noTieneNingunIngredienteQueNoSeanSalsaYQueso  (Capa ing p) = (esQuesoOEsSalsa ing) && (noTieneNingunIngredienteQueNoSeanSalsaYQueso p) 
+
+esQuesoOEsSalsa :: Ingrediente -> Bool 
+esQuesoOEsSalsa ing = (esQueso ing) || (esSalsa ing) 
 
 tieneQueso :: Pizza -> Bool 
 tieneQueso Prepizza         = False 
@@ -67,34 +69,31 @@ tieneSalsa (Capa ing pizza) = esSalsa ing || tieneSalsa pizza
 
 
 
+
+
+
 duplicarAceitunas :: Pizza -> Pizza 
 duplicarAceitunas Prepizza         = Prepizza 
-duplicarAceitunas (Capa ing pizza) = if esAceituna ing 
-                                     then Capa (duplicarCapaDeAceituna ing) (duplicarAceitunas pizza) 
-                                     else Capa ing (duplicarAceitunas pizza) 
+duplicarAceitunas (Capa ing pizza) = Capa (duplicarCapaDeAceituna ing) (duplicarAceitunas pizza)
 
 duplicarCapaDeAceituna :: Ingrediente ->Ingrediente 
 duplicarCapaDeAceituna (Aceitunas cantidad) = Aceitunas (cantidad * 2)
+duplicarCapaDeAceituna ingrediente          = ingrediente
 
 cantDeCapasPorPizza :: [Pizza] -> [(Int, Pizza)] 
 cantDeCapasPorPizza []     = []
-cantDeCapasPorPizza (p:ps) = (cantidadDeIngredientesDePizza p, p) : cantDeCapasPorPizza ps
-
-cantidadDeIngredientesDePizza :: Pizza -> Int 
-cantidadDeIngredientesDePizza pizza = longitud (sinIngredientesRepetidos (ingredientesUsados pizza))
+cantDeCapasPorPizza (p:ps) = (cantidadDeCapas p, p) : cantDeCapasPorPizza ps
 
 
 sinIngredientesRepetidos :: [Ingrediente] -> [Ingrediente]
 sinIngredientesRepetidos []     = []
-sinIngredientesRepetidos (i:is) = let is' = sinIngredientesRepetidos is
-                                     in if perteneceIngrediente i is'
-                                         then     is'
-                                         else i : is' 
+sinIngredientesRepetidos (i:is) = singularSi (not(perteneceIngrediente i is)) i ++ sinIngredientesRepetidos is
 
 
 perteneceIngrediente :: Ingrediente -> [Ingrediente] -> Bool
-perteneceIngrediente i []         = False
-perteneceIngrediente i (ing:ings) = sonElMismoIngrediente i ing || perteneceIngrediente i ings    
+perteneceIngrediente ing []     = False 
+perteneceIngrediente ing (i:is) = sonElMismoIngrediente ing i || perteneceIngrediente ing is
+
 
 ingredientesUsados :: Pizza -> [Ingrediente] 
 ingredientesUsados Prepizza = [] 
@@ -119,11 +118,11 @@ data Cofre = Cofre [Objeto] deriving Show
 
 data Mapa = Fin Cofre | Bifurcacion Cofre Mapa Mapa deriving Show
 
-cofre1 = Cofre [Tesoro, Chatarra, Tesoro] 
+cofre1 = Cofre [Chatarra, Chatarra, Chatarra] 
 
 cofre2 = Cofre [Chatarra, Chatarra, Tesoro]
 
-cofre3 = Cofre [Chatarra, Tesoro, Chatarra]
+cofre3 = Cofre [Chatarra, Chatarra, Chatarra, Tesoro]
 
 cofre5 = Cofre []
 
@@ -132,7 +131,7 @@ mapa2 = Fin cofre2
 
 mapa3 = Bifurcacion cofre3 mapa1 mapa2
 
-
+mapa4 = Bifurcacion cofre5 mapa1 mapa3
 
 hayTesoro :: Mapa -> Bool
 hayTesoro (Fin cofre)               = hayTesoroEnCofre cofre 
@@ -164,11 +163,20 @@ hayTesoroEnEstePunto (Bifurcacion cofre _ _) = hayTesoroEnCofre cofre
 
 
 caminoAlTesoro :: Mapa -> [Dir]
-caminoAlTesoro (Fin cofre)               = []
-caminoAlTesoro (Bifurcacion cofre mi md) = if hayTesoroEnCofre cofre 
-                                            then [] 
-                                            else elegirCaminoAlTesoro (Bifurcacion cofre mi md)
+caminoAlTesoro (Fin cofre)   = []
+caminoAlTesoro mapa          = if hayTesoroEnCofre (cofre mapa) 
+                               then [] 
+                               else caminoAlTesoroEnMapa mapa 
 
+caminoAlTesoroEnMapa :: Mapa -> [Dir] 
+caminoAlTesoroEnMapa  (Fin cofre)               = []
+caminoAlTesoroEnMapa  (Bifurcacion cofre mi md) = if hayTesoro mi 
+                                                  then Izq : caminoAlTesoroEnMapa mi 
+                                                  else Der : caminoAlTesoroEnMapa md 
+
+cofre :: Mapa -> Cofre 
+cofre  (Fin c)             = c 
+cofre  (Bifurcacion c _ _) = c
 
 
 elegirCaminoAlTesoro :: Mapa -> [Dir]
@@ -178,16 +186,10 @@ elegirCaminoAlTesoro (Bifurcacion cofre mi md) = if hayTesoro mi
 
 
 caminoDeLaRamaMasLarga :: Mapa -> [Dir] 
-caminoDeLaRamaMasLarga (Fin cofre)               = []
-caminoDeLaRamaMasLarga (Bifurcacion cofre mi md) =  if heightM mi > heightM md 
+caminoDeLaRamaMasLarga (Fin _)               = []
+caminoDeLaRamaMasLarga (Bifurcacion _ mi md) =  if length (caminoDeLaRamaMasLarga mi) > length (caminoDeLaRamaMasLarga md)
                                                     then Izq : caminoDeLaRamaMasLarga mi 
                                                     else Der : caminoDeLaRamaMasLarga md      
-
-
-
-heightM :: Mapa -> Int
-heightM (Fin cofre)                    = 0
-heightM (Bifurcacion cofre mi md)      = 1 + max (heightM mi) (heightM md)
 
 tesorosPorNivel :: Mapa -> [[Objeto]] 
 tesorosPorNivel (Fin cofre)               = [tesorosEn cofre] 
@@ -213,8 +215,8 @@ juntarNiveles xss     []        = xss
 juntarNiveles (xs:xss) (ys:yss) = (xs ++ ys)  :  juntarNiveles xss yss
 
 todosLosCaminos :: Mapa -> [[Dir]]
-todosLosCaminos (Fin cofre)               = []
-todosLosCaminos (Bifurcacion cofre mi md) = (prepend Izq (todosLosCaminos mi)) ++ (prepend Der (todosLosCaminos md))
+todosLosCaminos (Fin cofre)               = [[]]
+todosLosCaminos (Bifurcacion cofre mi md) = [] : prepend Izq (todosLosCaminos mi) ++ prepend Der (todosLosCaminos md)
 
 
 prepend :: Dir -> [[Dir]] -> [[Dir]]
@@ -222,13 +224,14 @@ prepend d []       = []
 prepend d (dir:dirs) = (d:dir) : (prepend d dirs)
 
 
-data Componente = LanzaTorpedos | Motor Int | Almacen [Barril]
-data Barril = Comida | Oxigeno | Torpedo | Combustible
-data Sector = S SectorId [Componente] [Tripulante]
-type SectorId = String
-type Tripulante = String
-data Tree a = EmptyT | NodeT a (Tree a) (Tree a)
-data Nave = N (Tree Sector)
+data Componente = LanzaTorpedos | Motor Int | Almacen [Barril] deriving Show
+data Barril = Comida | Oxigeno | Torpedo | Combustible  deriving Show
+data Sector = S SectorId [Componente] [Tripulante] deriving Show
+type SectorId = String    
+type Tripulante = String 
+data Tree a = EmptyT | NodeT a (Tree a) (Tree a) deriving Show
+data Nave = N (Tree Sector) deriving Show
+
 
 sectores :: Nave -> [SectorId]
 sectores (N treeSector) = sectoresDe treeSector 
@@ -253,16 +256,13 @@ poderDeMotorDeSector (S _ componentes _ ) = poderDeMotorEntreComponentes compone
 
 poderDeMotorEntreComponentes :: [Componente] -> Int 
 poderDeMotorEntreComponentes []      = 0
-poderDeMotorEntreComponentes (c:cs)  = if esMotor c 
-                                       then poderDeMotor c + poderDeMotorEntreComponentes cs 
-                                       else poderDeMotorEntreComponentes cs
+poderDeMotorEntreComponentes (c:cs)  = poderDeMotorEnComponente c + poderDeMotorEntreComponentes cs
 
-esMotor :: Componente -> Bool 
-esMotor (Motor _ ) = True 
-esMotor _          = False                                
 
-poderDeMotor :: Componente -> Int 
-poderDeMotor (Motor potencia) = potencia 
+poderDeMotorEnComponente :: Componente -> Int 
+--Precondición: El componente es un Motor.
+poderDeMotorEnComponente (Motor n) = n
+poderDeMotorEnComponente  _        = 0
 
 
 barriles :: Nave -> [Barril] 
@@ -277,16 +277,13 @@ barrilesDeSector (S _ componente _ ) =  barrilesDeLosComponentes componente
 
 barrilesDeLosComponentes :: [Componente] -> [Barril] 
 barrilesDeLosComponentes []     = []
-barrilesDeLosComponentes (c:cs) = if esAlmacen c 
-                                  then barrilesDeAlmacen c ++ barrilesDeLosComponentes cs 
-                                  else barrilesDeLosComponentes cs 
+barrilesDeLosComponentes (c:cs) = barrilesDeAlmacen c ++ barrilesDeLosComponentes cs
 
-esAlmacen :: Componente -> Bool 
-esAlmacen (Almacen xs ) = True 
-esAlmacen _            = False 
-
-barrilesDeAlmacen :: Componente -> [Barril] 
+barrilesDeAlmacen :: Componente -> [Barril]
+--Precondición: El Componente dado debe ser de tipo Almacen.
 barrilesDeAlmacen (Almacen barriles ) = barriles 
+barrilesDeAlmacen _                   = []
+
 
 agregarASector :: [Componente] -> SectorId -> Nave -> Nave
 agregarASector cs sId (N treeSector) = N (buscarSectorYAgregarComponentes cs sId treeSector) 
@@ -343,18 +340,15 @@ tripulantesDe (NodeT sector si sd) = sinTripulantesRepetidos (tripulantesDelSect
 
 tripulantesDelSector :: Sector -> [Tripulante]
 tripulantesDelSector (S _ _ trip)  = trip 
-
-
-sinTripulantesRepetidos :: [Tripulante] -> [Tripulante]
-sinTripulantesRepetidos []     = []
-sinTripulantesRepetidos (t:ts) = let ts' = sinTripulantesRepetidos ts
-                                     in if elTripulantePertenece t ts'
-                                        then     ts'
-                                        else t : ts'  
                             
+--Otra alternativa de usar sin repetidos con la subtarea singularSi(algo parecido a lo visto en intro)
+sinTripulantesRepetidos :: [Tripulante] -> [Tripulante] 
+sinTripulantesRepetidos  []    = []
+sinTripulantesRepetidos (t:ts) = singularSi (not (elTripulantePertenece t ts)) t ++ sinTripulantesRepetidos ts
+
 elTripulantePertenece ::  Tripulante -> [Tripulante] -> Bool 
-elTripulantePertenece   trip []     = False    
-elTripulantePertenece   trip (t:ts) = (trip == t) || elTripulantePertenece trip ts 
+elTripulantePertenece trip trips = elem trip (trips)
+
 
 
 type Presa = String -- nombre de presa
@@ -364,11 +358,14 @@ data Lobo = Cazador Nombre [Presa] Lobo Lobo Lobo | Explorador Nombre [Territori
 data Manada = M Lobo
 
 
+t1 = "Berazategui" 
+t2 = "Berazategui"
+
 lobo1 :: Lobo
-lobo1 = Cazador "Tom" ["p1","p2","p3","p4","p5"] lobo2 lobo3 lobo4
+lobo1 = Cazador "Tom" ["p1","p2","p3","p4","p5"] lobo9 lobo3 lobo10
 
 lobo2 :: Lobo
-lobo2 = Explorador "Nico" ["t1","t2"] lobo5 lobo6
+lobo2 = Explorador "Nico" [t1, t2] lobo5 lobo6
 
 lobo3 :: Lobo
 lobo3 = Cazador "Julio" ["p1","p2"] lobo7 lobo8 lobo9
@@ -391,10 +388,13 @@ lobo8 = Cria "Cria5"
 lobo9 :: Lobo
 lobo9 = Cazador "Pitchiot" ["p1","p2","p2","p2","p2","p2","p2","p2","p2","p2"] lobo4 lobo5 lobo6
 
+lobo10 :: Lobo 
+lobo10 = Cazador "Tomas" ["p1","p2","p2","p2","p2","p2","p2","p2","p2","p2"] lobo2 lobo3 lobo1
+
 
 
 manada :: Manada
-manada = M lobo1
+manada = M lobo10
 
 buenaCaza :: Manada -> Bool
 buenaCaza (M lobo) = cantidadDePresas lobo > cantidadDeCrias lobo
@@ -445,15 +445,58 @@ losQueExploraronL t (Cazador n ps l1 l2 l3) = losQueExploraronL t l1 ++  losQueE
 
 
 exploradoresPorTerritorio :: Manada -> [(Territorio, [Nombre])]
-exploradoresPorTerritorio manada = exploradoresPorTerritorioManada manada (territoriosSinRep manada)  
+exploradoresPorTerritorio (M lobo) = exploradoresPorTerritorioLobo lobo 
 
-exploradoresPorTerritorioManada :: Manada -> [Territorio] -> [(Territorio, [Nombre])]
-exploradoresPorTerritorioManada manada []  = [] 
-exploradoresPorTerritorioManada manada (t:ts) =  generadorDeTupla t (losQueExploraron t manada) : exploradoresPorTerritorioManada manada ts 
+exploradoresPorTerritorioLobo :: Lobo -> [(Territorio, [Nombre])]
+exploradoresPorTerritorioLobo (Cria       n            ) = [] 
+exploradoresPorTerritorioLobo (Explorador n ts l1 l2   ) = agregarATerritorio n ts (unionDeTuplasSinElementosRepetidos (exploradoresPorTerritorioLobo l1) (exploradoresPorTerritorioLobo l2)) 
+exploradoresPorTerritorioLobo (Cazador    n ps l1 l2 l3) = unionDeTuplasSinElementosRepetidos (exploradoresPorTerritorioLobo l1) (unionDeTuplasSinElementosRepetidos (exploradoresPorTerritorioLobo l2) (exploradoresPorTerritorioLobo l3)) 
 
 
-generadorDeTupla :: a -> b -> (a, b)
-generadorDeTupla a b = (a, b)
+agregarATerritorio :: Nombre -> [Territorio] -> [(Territorio, [Nombre])] -> [(Territorio, [Nombre])]
+agregarATerritorio nombre []      tns  =  tns   
+agregarATerritorio nombre (t:ts)  tns  =  agregarLoboATerritorio nombre t (agregarATerritorio nombre ts tns) 
+
+
+agregarLoboATerritorio :: Nombre -> Territorio -> [(Territorio, [Nombre])] -> [(Territorio, [Nombre])]
+agregarLoboATerritorio nombre territorio []          = [(territorio, [nombre])]
+agregarLoboATerritorio nombre territorio ((t,n):tns) = let (ter, l) = (t,n) 
+                                                       in if esMismoTerritorio territorio ter
+                                                       then (ter, agregarElementoSiNoEsta nombre l) : tns 
+                                                       else (t,n) : agregarLoboATerritorio nombre territorio tns                                        
+
+
+esMismoTerritorio :: Territorio -> Territorio -> Bool 
+esMismoTerritorio  t1 t2 = t1 == t2 
+
+
+
+unionDeTuplasSinElementosRepetidos :: [(Territorio, [Nombre])] -> [(Territorio, [Nombre])] -> [(Territorio, [Nombre])]
+unionDeTuplasSinElementosRepetidos []                tns2 = tns2 
+unionDeTuplasSinElementosRepetidos ((t1, n1): tns1)  tns2 = agregarTerritorio (t1, n1) tns2 
+ 
+
+agregarTerritorio :: (Territorio, [Nombre]) -> [(Territorio, [Nombre])] -> [(Territorio, [Nombre])] 
+agregarTerritorio  tn  []          = [tn]
+agregarTerritorio  tn  ((t,n):tns) = let (territorio1, l1) = tn  
+                                         (territorio2, l2) = (t,n)
+                                     in if territorio1 == territorio2
+                                         then (t, unionSinRepetidos l1 l2) : tns 
+                                         else (t,n) : agregarTerritorio tn tns
+
+
+agregarElementoSiNoEsta :: Eq a => a -> [a] -> [a] 
+agregarElementoSiNoEsta  x []      = x : []
+agregarElementoSiNoEsta  x (y:ys)  = if x == y 
+                                     then (y:ys) 
+                                     else  y : agregarElementoSiNoEsta x ys
+
+
+unionSinRepetidos :: Eq a => [a] -> [a] -> [a] 
+unionSinRepetidos  []    ys = ys
+unionSinRepetidos (x:xs) ys = agregarElementoSiNoEsta x (unionSinRepetidos xs ys)
+
+
 
 
 territoriosSinRep :: Manada -> [Territorio]
@@ -474,7 +517,7 @@ sinTerritoriosRepetidos (t:ts) = let ts' = sinTerritoriosRepetidos ts
                                      in if perteneceTerritorio t ts'
                                         then     ts'
                                         else t : ts'                             
-
+{-
 superioresDelCazador :: Nombre -> Manada -> [Nombre]
 --Precondición : hay un cazador con dicho nombre y es único
 superioresDelCazador nombre (M lobo) = superioresDelCazadorLobo nombre lobo
@@ -485,3 +528,4 @@ superioresDelCazadorLobo nombre (Explorador n1 ts l1 l2) = superioresDelCazadorL
 superioresDelCazadorLobo nombre (Cazador n1 ps l1 l2 l3) =  if nombre == n1
                                                     then []
                                                     else n1 : superioresDelCazadorLobo nombre l1 ++ superioresDelCazadorLobo nombre l2 ++ superioresDelCazadorLobo nombre l3                                        
+-}
