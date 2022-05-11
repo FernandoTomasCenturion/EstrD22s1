@@ -382,39 +382,3 @@ consolidar   proyecto  ((p,i):pis)   = if sonLosMismosProyectos  p proyecto
                                   then (proyecto, i +1) : pis 
                                   else  (p,i) : consolidar proyecto pis
 
-
-superioresDelCazador :: Nombre -> Manada -> [Nombre]
-superioresDelCazador nombre (M lobo) = superioresDelCazadorLobo nombre lobo
-
-
-superioresDelCazadorLobo :: Nombre -> Lobo -> [Nombre]
-superioresDelCazadorLobo nombre (Cria n1)                = error "No hay lobos subordinados"
-superioresDelCazadorLobo nombre (Explorador n1 ts l1 l2) =  nombre : superioresDelCazadorLobo nombre  (loboSubordinado nombre [l1,l2])
-superioresDelCazadorLobo nombre (Cazador n1 ps l1 l2 l3) =  nombre : superioresDelCazadorLobo nombre  (loboSubordinado nombre [l1,l2,l3])
-
-
-loboSubordinado :: Nombre -> [Lobo] -> Lobo 
-loboSubordinado nombre (lobo:[])    = lobo
-loboSubordinado nombre (lobo:lobos) = if perteneceLoboSubordinado nombre lobo 
-                                      then lobo 
-                                      else loboSubordinado nombre lobos 
-
-
-
-perteneceLoboSubordinado :: Nombre -> Lobo -> Bool 
-perteneceLoboSubordinado nombre (Cria       n1)                   = False -- La cria no tiene lobos en su estructura
-perteneceLoboSubordinado nombre (Explorador n1 ts lobo1 lobo2)    = perteneceLobo nombre [lobo1, lobo2]
-perteneceLoboSubordinado nombre (Cazador n1 ps lobo1 lobo2 lobo3) = perteneceLobo nombre [lobo1, lobo2, lobo3]
-
-
-perteneceLobo :: Nombre -> [Lobo] -> Bool 
-perteneceLobo nombre []     = False
-perteneceLobo nombre (l:ls) = nombre == nombreLobo l || perteneceLobo nombre ls
-
-
-
-
-nombreLobo :: Lobo -> Nombre 
-nombreLobo (Cria       nombre      )        = nombre 
-nombreLobo (Explorador nombre  ts l1 l2   ) = nombre 
-nombrLobo  (Cazador    nombre  ps l1 l2 l3) = nombre 
