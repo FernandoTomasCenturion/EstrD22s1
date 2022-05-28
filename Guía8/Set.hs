@@ -1,4 +1,4 @@
-module Set (Set, emptyS, addS, belongs, sizeS, removeS, unionS, intersection, setToList) 
+module Set (Set, emptyS, isEmptyS, addS, belongs, sizeS, removeS, unionS, setToList, intersection) 
 
 where
 
@@ -34,15 +34,18 @@ sinRepetidosMejor (x:xs) = let xs' = sinRepetidosMejor xs
                                          else x : xs' 
 
 
-s1 :: Set 
+s1 :: Set Int
 s1 = ConsS [1,2,3,4,5,5]
 
-s2 :: Set 
-s2 = ConsS [7,8,9,1]
+s2 :: Set Int
+s2 = ConsS [7,8,9,1,3]
 
 --O(1)
 emptyS :: Set a 
 emptyS = ConsS []
+
+isEmptyS :: Set a -> Bool
+isEmptyS (ConsS xs) = null xs 
 
 --O(1)
 addS :: Eq a => a -> Set a -> Set a 
@@ -72,6 +75,7 @@ unionS :: Eq a => Set a -> Set a -> Set a
 unionS (ConsS xs) s  = agregarAlTodosSet xs s
 
 
+
 agregarAlTodosSet :: Eq a => [a] -> Set a -> Set a
 agregarAlTodosSet [] s     = s
 agregarAlTodosSet (x:xs) s = addS x (agregarAlTodosSet xs s)
@@ -85,7 +89,6 @@ intersectionList [] ys = []
 intersectionList (x:xs) ys = if pertenece x ys 
                              then x : intersectionList xs ys 
                              else intersectionList xs ys
-
 
 --O(1)
 setToList :: Eq a => Set a -> [a]

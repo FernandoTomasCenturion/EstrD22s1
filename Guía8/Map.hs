@@ -43,6 +43,9 @@ lookUpM :: Eq k => k -> Map k v -> Maybe v
 lookUpM key (M kvs) = buscar key kvs
 
 
+
+
+
 buscar :: Eq k => k -> [(k,v)] -> Maybe v
 buscar k []            = Nothing
 buscar k ((k',v'):kvs) = if k==k' 
