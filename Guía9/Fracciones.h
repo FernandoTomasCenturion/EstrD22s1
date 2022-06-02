@@ -16,5 +16,5 @@ int          mcd(int x, int y;)
 float        division(Fraccion f);
 Fraccion     simplificada(Fraccion f);
 Fraccion     sumF(Fraccion f1, Fraccion f2);
-Fraccion     ShowFraccion(Fraccion f);
+Fraccion     showFraccion(Fraccion f);
 
