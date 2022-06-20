@@ -23,11 +23,15 @@ consEmpresa = ConsE (EmptyM (EmptyS)) EmptyM
 buscarPorCUIL :: CUIL -> Empresa -> Empleado
 buscarPorCUIL cuil (ConsE (mapSector(setE)) (mapEmpleado)) = lookUpM cuil mapEmpleado 
 
---O(n)
+--O(logS + E)
 empleadosDelSector :: SectorId -> Empresa -> [Empleado]
 empleadosDelSector sectorId (ConsE (mapSector(setE)) (mapEmpleado)) = if belongs sectorId setE 
                                                                       then setToList setE 
                                                                       else []
+
+agregarSectorId :: SectorId -> Empleado -> Empleado
+agregarSectorId
+
 
 --O(n) 
 todosLosCUIL :: Empresa -> [CUIL] 
@@ -64,10 +68,29 @@ agregarEmpleadoALosSectores (s:ss) empleado  mpSectorId = assocM s (addS emplead
 
 
 
+--O(Log S)
+agregarSector :: SectorId -> Empresa -> Empresa
+agregarSector sid (ConsE mpSectorId mpE) = ConsE (agregarSectorAMap sid mpSectorId) mpE
+
+--O(Log S)
+agregarSectorAMap :: SectorId -> Map SectorId (Set Empleado) -> Map SectorId (Set Empleado)
+agregarSector sectorId mpSectorId = assocM sectorId emptyS mpSectorId 
 
 
+agregarASector :: SectorId -> CUIL -> Empresa -> Empresa
+--Propósito: agrega un sector al empleado con dicho CUIL.
+agregarASector sid cuil (ConsE mpSectorId mpE) = let empleado = agregarSector sid (fromJust(lookUpM c mpE))
 
 
-agregarSector :: SectorId -> Empleado -> Empleado
+borrarEmpleado :: CUIL -> Empresa -> Empresa
+--Propósito: elimina al empleado que posee dicho CUIL.
+borrarEmpleado cuil (ConsE mpSectorId mpE) = ConsE  
+                                            mpSectorId 
+                                            (borrarEmpleadoDelMapEmpleado cuil mpe) 
 
-
+borrarEmpleadoDelMapEmpleado :: CUIL -> Map CUIL Empleado -> Map CUIL Empleado
+borrarEmpleadoDelMapEmpleado cuil mapEmpleado = case lookUpM cuil mapEmpleado of 
+                                                Just e -> deleteM cuil mapEmpleado 
+                                                Nothing -> error "El CUIL no existe"
+                                                
+ 

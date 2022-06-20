@@ -1,7 +1,6 @@
 module Map (Map, emptyM, isEmptyM, assocM, lookUpM, deleteM, keys, m1, m2) where
 
-
-data Map k v = M [(k,v)]
+data Map k v= M[(k, v)]
 
 {-
 Inv. Representación: Ninguna. 
@@ -9,7 +8,7 @@ Inv. Representación: Ninguna.
 
 --Justificar costos.
 m1 = M [("Tomas", 1000), ("Fernando", 2003), ("Perla", 2008)]
-m2 = M [("Juan", 2016), ("Pepito", 666)]
+m2 = M [("Juan", 1), ("Pepito", 2)]
 
 
 instance (Show k, Show v) => Show (Map k v) where
