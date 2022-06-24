@@ -36,10 +36,10 @@ search ly d (L mx mp) = let Just posl = lookUpM ly mp
                         in filtrarLosQueEstanAMenosDe d posL (keys mp) mp 
 
 --O(L* Log L)
-filtrarLosQueEstanAMenosDe :: 
-filtrarLosQueEstanAMenosDe []       mp      = []    
-filtrarLosQueEstanAMenosDe posl (ly:lys) mp = let Just pos = lookUpM ly mp 
-                                          in singularSi(distance posL pos < d) ly : filtrarLosQueEstanAMenosDe posL lys mp
+filtrarLosQueEstanAMenosDe :: Distance -> [Lyndo] -> Map 
+filtrarLosQueEstanAMenosDe posl []       mp      = []    
+filtrarLosQueEstanAMenosDe posl (ly:lys) mp      = let Just pos = lookUpM ly mp 
+                                                   in singularSi(distance posL pos < d) ly : filtrarLosQueEstanAMenosDe posL lys mp
 
 match :: Lyndo -> Lyndo -> Lynder -> Lynder  
 match ly1 ly2 (L mx mp) = let Just pos1 = lookUpM ly1 mp 
