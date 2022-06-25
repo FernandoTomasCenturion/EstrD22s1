@@ -66,3 +66,22 @@ borrar2 x y (t:ts) = borrar x (borrar y ts)
 
 borrar3 :: Eq a => a -> a -> a -> [a] -> [a]
 borrar3 x y s (t:ts) = borrar x (borrar y (borrar s ts))
+
+
+data Componente = LanzaTorpedos | Motor Int | Almacen [Barril] deriving Show 
+
+data Barril = Comida | Oxigeno | Torpedo | Combustible deriving Show 
+
+
+barril0 = Comida
+barril1 = Oxigeno
+barril2 = Torpedo
+
+componente2= LanzaTorpedos
+
+componente1 = Almacen [barril0, barril1, barril2]
+
+
+barrilesDeComponente :: Componente -> [Barril] 
+barrilesDeComponente  (Almacen barrilesC) = barrilesC
+barrilesDeComponente _                    = []
