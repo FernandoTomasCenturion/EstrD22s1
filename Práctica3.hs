@@ -151,7 +151,7 @@ sumarT :: Tree Int -> Int
 sumarT EmptyT          = 0
 sumarT (NodeT n t1 t2) = n + sumarT t1 + sumarT t2
 
-sizeT :: Tree Int -> Int 
+sizeT :: Tree Integer -> Int 
 sizeT EmptyT           = 0
 sizeT (NodeT n t1 t2)  = 1 + (sizeT t1) + (sizeT t2) 
 

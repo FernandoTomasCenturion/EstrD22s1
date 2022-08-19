@@ -1,3 +1,5 @@
+
+
 singularSi:: a -> Bool -> [a] 
 singularSi x True  = [x]
 singularSi x False = []
@@ -68,6 +70,19 @@ borrar3 :: Eq a => a -> a -> a -> [a] -> [a]
 borrar3 x y s (t:ts) = borrar x (borrar y (borrar s ts))
 
 
+longitud :: [a] -> Int 
+longitud []     = 0
+longitud (x:xs) = 1 + longitud xs
+
+borrarNVeces :: [a] -> Int -> [a] 
+--Precondición: n debe ser menor o igual a la longitud de la lista dada.
+borrarNVeces xs     0 = xs
+borrarNVeces (x:xs) n = if n <= longitud xs  
+                        then borrarNVeces xs (n-1) 
+                        else (x:xs)
+--Costo O(N) siendo n la cantidad de elementos de la lista dada.
+
+
 data Componente = LanzaTorpedos | Motor Int | Almacen [Barril] deriving Show 
 
 data Barril = Comida | Oxigeno | Torpedo | Combustible deriving Show 
@@ -83,5 +98,39 @@ componente1 = Almacen [barril0, barril1, barril2]
 
 
 barrilesDeComponente :: Componente -> [Barril] 
-barrilesDeComponente  (Almacen barrilesC) = barrilesC
-barrilesDeComponente _                    = []
+barrilesDeComponente (Almacen barrilesC) = barrilesC
+barrilesDeComponente _                   = []
+
+fibonacci :: Int -> Int
+fibonacci 0 = 0
+fibonacci 1 = 1
+fibonacci n = fibonacci (n-1) + fibonacci (n-2)
+
+
+productoria :: [Int] -> Int 
+productoria []     = 1
+productoria (x:xs) = x * productoria xs  
+
+sucesores :: [Int] -> [Int] 
+sucesores []     = [] 
+sucesores (x:xs) = (x+1) : sucesores xs
+
+algoritmoDeEuclides :: Integer -> Integer -> Integer 
+algoritmoDeEuclides a 0 = a
+algoritmoDeEuclides a b = algoritmoDeEuclides b (a `mod` b) 
+
+factores :: Int -> [Int]
+factores n = [x | x <- [1..n], n `mod` x == 0]   
+             
+
+esPrimo :: Int -> Bool 
+esPrimo n = factores n == [1,n]
+
+numerosPrimos :: [Int] -> [Int] 
+numerosPrimos []     = []
+numerosPrimos (x:xs) = singularSi x (esPrimo x) ++ numerosPrimos xs  
+
+numerosCoprimos :: [Int] -> [Int] 
+numerosCoprimos []     = []
+numerosCoprimos (x:xs) = singularSi x (not(esPrimo x)) ++ numerosCoprimos xs 
+

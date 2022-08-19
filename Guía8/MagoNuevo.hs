@@ -26,7 +26,7 @@ registrar :: Nombre -> EscuelaDeMagia -> EscuelaDeMagia
 --Preco: El mago con el nombre dado no existe en la EDM.
 registrar nombre (EDM setH mapM pqM) = case lookUpM nombre mapM of
                                       Nothing -> let m = crearM nombre in EDM setH (assocM nombre m mapM) (insertPQ m pqM) 
-                                      Just m -> EDM setH mapM pqM
+                                      Just m  -> EDM setH mapM pqM
 
 -- Eficiencia                         O(Log M)
 -- Justificacion: Costo de: *lookUpM  O(Log M) 

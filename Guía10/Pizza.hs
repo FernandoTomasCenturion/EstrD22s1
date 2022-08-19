@@ -44,5 +44,11 @@ esJamon Jamon = True
 esJamon  _    = False
 
 cantCapasPorPizza :: [Pizza] -> [(Int, Pizza)]
-cantCapasPorPizza []           = [] 
+cantCapasPorPizza []      = [] 
 cantCapasPorPizza (p:ps)  = (cantidadDeCapas p, p) : cantCapasPorPizza ps
+
+ingredienteH:: [Ingrediente] -> [Ingrediente] 
+ingredienteH ingredientes = tail ingredientes
+
+ingrediente :: (Ingrediente, Ingrediente) -> Ingrediente 
+ingrediente (i, ing) = fst (i, ing)

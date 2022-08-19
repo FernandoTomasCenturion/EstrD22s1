@@ -15,12 +15,6 @@ data Componente = LanzaTorpedos | Motor Int | Almacen [Barril]
 data Barril = Comida | Oxigeno | Torpedo | Combustible
 
 
-barrilesDeComponente :: Componente -> [Barril] 
-barrilesDeComponente  (Almacen barrilesC) = barrilesC
-barrilesDeComponente _                    = []
-
-
-
 {-
     Inv. Representación: Con la Nave siendo = N ms mt mht 
                         *Todos los tripulantes que estan en mt DEBEN estar en mht, y viceversa.
@@ -28,6 +22,14 @@ barrilesDeComponente _                    = []
                         *En mt el tripulante asociado al nombre n debe tener el nombre n.
                         *Dado un tripulante de mt, ese trip. de todos los sectores que conoce que existen en ms y ese trip. figura en c/u de ellos.
 -}      
+
+
+
+barrilesDeComponente :: Componente -> [Barril] 
+barrilesDeComponente  (Almacen barrilesC) = barrilesC
+barrilesDeComponente _                    = []
+--Eficiencia O(1)
+
 
 construir :: [SectorId] -> Nave
 --Propósito: Construye una nave con sectores vacíos, en base a una lista de identificadores de sectores.
@@ -114,7 +116,7 @@ agregarASector componentes sId ms = assocM sId (agregarASectorEnSet componentes 
 --Costo Final O(C + Log S)
 
 agregarASectorEnSet :: [Componente] -> Sector -> Sector 
-agregarASectorEnSet []     s = ... 
+agregarASectorEnSet []     s = s
 agregarASectorEnSet (c:cs) s = agregarC c s (agregarASectorEnSet cs s)
 --Justificación: Costos: *agregarC O(1) 
 --                       *agregarASectorEnSet O(C) 

@@ -1,0 +1,31 @@
+import Empresa 
+import Map 
+import Set
+
+--Preguntar
+comenzarCon :: [SectorId] -> [CUIL] -> Empresa
+comenzarCon sectores cs = agregarTodosLosEmpleados cs (consEmpresa sectores) 
+
+agregarTodosLosEmpleados :: [Cuil] -> Empresa -> Empresa 
+agregarTodosLosEmpleados []     empresa = empresa
+agregarTodosLosEmpleados (c:cs) empresa = agregarEmpleado [] c empresa (agregarTodosLosEmpleados cs empresa)
+
+
+recorteDePersonal :: Empresa -> Empresa
+recorteDePersonal e  =  let cs = todosLosCUIL e
+                        in borrarNEmpleados cs (div (lenght cs) 2) e
+
+
+borrarNEmpleados :: [Cuil] -> Int -> Empresa -> Empresa
+borrarNEmpleados cs     0 e = e
+borrarNEmpleados (c:cs) n e = borrarEmpleado c e (borrarNEmpleados cs (n-1) e)
+
+convertirEnComodin :: CUIL -> Empresa -> Empresa
+convertirEnComodin  c e = let sectores = todosLosSectores e in
+                          agregarEmpleado sectores c e
+--Preguntar
+{-
+esComodin :: CUIL -> Empresa -> Bool
+esComodin c e = let empleado = buscarPorCUIL c e 
+                in perteneceATodosLosSectores sectores empleado (todosLosSectores e)
+-}

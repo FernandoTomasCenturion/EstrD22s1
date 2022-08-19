@@ -1,0 +1,28 @@
+singularSi:: a -> Bool -> [a] 
+singularSi x True  = [x]
+singularSi x False = []
+
+
+type Presa       = String 
+type Territorio  = String 
+type Nombre      = String
+
+
+data Lobo   =  Cazador    Nombre [Presa] Lobo Lobo Lobo  
+              |Explorador Nombre [Territorio] Lobo Lobo 
+              |Cria       Nombre 
+
+data Manada = M Lobo 
+
+--Punto 1 
+
+manada1= M  (Cazador    "Lobo1" ["1", "2", "3", "4"] 
+            (Explorador "Lobo2" []  
+            (Cria       "Lobo3")
+            (Cria       "Lobo4"))
+            (Explorador "Lobo5" []
+            (Cria       "Lobo6")
+            (Cria       "Lobo7"))
+            (Cria       "Lobo8"))
+
+
