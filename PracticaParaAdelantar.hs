@@ -17,45 +17,18 @@ data Lobo   =    Cazador Nombre [Presa] Lobo Lobo Lobo
                | Cria Nombre  deriving Show              
 
 data Manada = M Lobo deriving (Show)
---Punto 1 
+
 t1 = "Berazategui" 
-t2 = "Berazategui"
 
-lobo1 :: Lobo
-lobo1 = Cazador "Tom" ["p1","p2","p3","p4","p5"] lobo9 lobo3 lobo10
-
-lobo2 :: Lobo
-lobo2 = Explorador "Nico" [t1, t2] lobo5 lobo6
-
-lobo3 :: Lobo
-lobo3 = Cazador "Julio" ["p1","p2"] lobo7 lobo8 lobo9
-
-lobo4 :: Lobo
-lobo4 = Cria "Cria1"
-
-lobo5 :: Lobo
-lobo5 = Cria "Cria2"
-
-lobo6 :: Lobo
-lobo6 = Cria "Cria3"
-
-lobo7 :: Lobo
-lobo7 = Cria "Cria4"
-
-lobo8 :: Lobo
-lobo8 = Cria "Cria5"
-
-lobo9 :: Lobo
-lobo9 = Cazador "Pitchiot" ["p1","p2","p2","p2","p2","p2","p2","p2","p2","p2"] lobo4 lobo5 lobo6
-
-lobo10 :: Lobo 
-lobo10 = Cazador "Tomas" ["p1","p2","p2","p2","p2","p2","p2","p2","p2","p2"] lobo2 lobo3 lobo1
-
-
-
-manada :: Manada
-manada = M lobo10
-
+--Punto 1 
+manada = M (Cazador "Tomas" ["Presa1", "Presa2", "Presa3"]
+           (Explorador "Fernando" [t1]
+           (Cria "cria1")
+           (Cria "cria2"))
+           (Explorador "Franco" [t1]
+           (Cria "cria3")
+           (Cria "cria4"))
+           (Cria "cria5"))
 
 buenaCaza :: Manada -> Bool 
 buenaCaza (M l) = cantDePresas l > cantDeCrias l 
